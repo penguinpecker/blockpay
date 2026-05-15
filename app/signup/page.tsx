@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { CheckCircle2, ChevronRight } from "lucide-react";
+import { signIn } from "next-auth/react";
+import { CheckCircle2, ChevronRight, AlertTriangle, Copy, Check } from "lucide-react";
 import { Nav } from "@/components/nav";
 import { Footer } from "@/components/footer";
 
@@ -39,12 +40,76 @@ const initialState: FormState = {
   agree: false,
 };
 
+type SubmitState =
+  | { kind: "idle" }
+  | { kind: "submitting" }
+  | { kind: "success"; apiKey: string; merchantId: string }
+  | { kind: "error"; message: string };
+
 export default function SignupPage() {
   const [form, setForm] = useState<FormState>(initialState);
-  const [submitted, setSubmitted] = useState(false);
+  const [state, setState] = useState<SubmitState>({ kind: "idle" });
+  const [copied, setCopied] = useState(false);
+  const submitted = state.kind === "success";
 
   function update<K extends keyof FormState>(key: K, value: FormState[K]) {
     setForm((prev) => ({ ...prev, [key]: value }));
+  }
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setState({ kind: "submitting" });
+    try {
+      // 1. Sign in (creates a user row keyed on email + a session cookie).
+      const signInResult = await signIn("demo-email", {
+        email: form.email,
+        redirect: false,
+      });
+      if (signInResult?.error) {
+        setState({ kind: "error", message: "Could not create session. Try again." });
+        return;
+      }
+      // 2. Create the merchant profile + receive an API key.
+      const res = await fetch("/api/merchants", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          businessName: form.businessName,
+          email: form.email,
+          settlementAddress: form.wallet,
+          settlementChainKey: form.chain,
+          settlementCurrency: form.currency,
+          volumeEstimate: form.volume,
+        }),
+      });
+      const data: {
+        error?: string;
+        apiKey?: string;
+        merchant?: { id: string };
+      } = await res.json();
+      if (!res.ok || !data.apiKey || !data.merchant) {
+        setState({
+          kind: "error",
+          message: data.error ? `Failed: ${data.error}` : "Failed to create merchant.",
+        });
+        return;
+      }
+      setState({ kind: "success", apiKey: data.apiKey, merchantId: data.merchant.id });
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Unknown error";
+      setState({ kind: "error", message: msg });
+    }
+  }
+
+  async function copyKey() {
+    if (state.kind !== "success") return;
+    try {
+      await navigator.clipboard.writeText(state.apiKey);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1800);
+    } catch {
+      // clipboard blocked — user can select + copy manually
+    }
   }
 
   return (
@@ -72,7 +137,7 @@ export default function SignupPage() {
 
         <section className="px-6 pb-28 md:px-8">
           <div className="mx-auto max-w-xl">
-            {submitted ? (
+            {submitted && state.kind === "success" ? (
               <div className="card-frame p-8 text-center md:p-12">
                 <span
                   className="mx-auto inline-flex h-14 w-14 items-center justify-center rounded-full border border-[rgba(74,222,128,0.35)] bg-[rgba(74,222,128,0.08)] text-[#4ade80]"
@@ -81,16 +146,36 @@ export default function SignupPage() {
                   <CheckCircle2 size={26} strokeWidth={2} />
                 </span>
                 <h2 className="mt-6 font-display text-3xl font-semibold tracking-tight">
-                  Account request <span className="text-accent">received</span>
+                  Account <span className="text-accent">created</span>
                 </h2>
                 <p className="mx-auto mt-4 max-w-sm text-sm text-zinc-400">
-                  We will reach out within 24 hours to finalize your onboarding
-                  and provision API keys for your settlement chain.
+                  Your merchant API key below. Save it now — it will not be shown again.
                 </p>
+                <div className="mt-6 rounded-2xl border border-[rgba(74,222,128,0.3)] bg-[rgba(8,14,10,0.7)] px-4 py-3 text-left">
+                  <div className="mb-2 text-[10px] uppercase tracking-[0.18em] text-zinc-500">
+                    BlockPay API key
+                  </div>
+                  <div className="flex items-center justify-between gap-3">
+                    <code className="break-all font-mono text-sm text-accent">
+                      {state.apiKey}
+                    </code>
+                    <button
+                      type="button"
+                      onClick={copyKey}
+                      className="shrink-0 rounded-full border border-[rgba(74,222,128,0.35)] p-2 text-accent transition-colors hover:bg-[rgba(74,222,128,0.08)]"
+                      aria-label="Copy API key"
+                    >
+                      {copied ? <Check size={14} /> : <Copy size={14} />}
+                    </button>
+                  </div>
+                </div>
                 <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
+                  <Link href="/dashboard" className="btn-pill-solid text-sm">
+                    Go to dashboard
+                    <ChevronRight size={16} strokeWidth={2.4} />
+                  </Link>
                   <Link href="/" className="btn-pill text-sm">
                     Back to home
-                    <ChevronRight size={16} strokeWidth={2.4} />
                   </Link>
                 </div>
               </div>
@@ -105,13 +190,7 @@ export default function SignupPage() {
                   dashboard.
                 </p>
 
-                <form
-                  onSubmit={(e) => {
-                    e.preventDefault();
-                    setSubmitted(true);
-                  }}
-                  className="mt-8 grid gap-5"
-                >
+                <form onSubmit={handleSubmit} className="mt-8 grid gap-5">
                   <Field label="Business name" htmlFor="businessName">
                     <input
                       id="businessName"
@@ -279,11 +358,19 @@ export default function SignupPage() {
                     </span>
                   </label>
 
+                  {state.kind === "error" && (
+                    <div className="flex items-start gap-2 rounded-xl border border-amber-500/30 bg-amber-500/[0.06] px-4 py-3 text-xs text-amber-300">
+                      <AlertTriangle size={14} className="mt-[2px] shrink-0" />
+                      <span>{state.message}</span>
+                    </div>
+                  )}
+
                   <button
                     type="submit"
-                    className="btn-pill-solid mt-3 justify-center text-sm"
+                    disabled={state.kind === "submitting"}
+                    className="btn-pill-solid mt-3 justify-center text-sm disabled:cursor-not-allowed disabled:opacity-70"
                   >
-                    Create merchant account
+                    {state.kind === "submitting" ? "Creating…" : "Create merchant account"}
                     <ChevronRight size={16} strokeWidth={2.4} />
                   </button>
                 </form>

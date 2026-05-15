@@ -1,19 +1,29 @@
 /**
  * BlockPay storage layer.
  *
- * Defines the canonical Storage interface used by every API route handler
- * and the on-chain event indexer. The in-memory implementation below is
- * good enough for local dev and preview deployments. In production this
- * should be swapped for a durable backend.
+ * Backed by Prisma against the Railway Postgres database. The public surface
+ * (the `storage` named export and the `Invoice` / `PaymentRecord` / etc. types
+ * below) is preserved for the existing API routes and the indexer — those
+ * callers still see millisecond timestamps, `0x${string}` addresses, and a
+ * synthesized `settlement` blob on each invoice, even though the underlying
+ * rows live in `Invoice`, `Payment`, and `Merchant` tables.
  *
- * TODO(prod): replace the in-memory Maps with Vercel KV (@vercel/kv) or
- * Upstash Redis. The Storage interface is intentionally narrow so the
- * swap is a single-file change.
+ * Translation rules:
+ *   - DateTime <-> ms-since-epoch (number)
+ *   - Payment.blockNumber is BigInt in Postgres; we surface it as a JS number
+ *     here. Routes that JSON.stringify Payment rows themselves (i.e. the
+ *     indexer status pipeline) must convert via `.toString()` first.
+ *   - `lineItems` is stored as `Json` in Postgres and re-typed as `LineItem[]`.
  */
 
+import type {
+  Invoice as PrismaInvoice,
+  Payment as PrismaPayment,
+} from "@prisma/client";
+import { prisma } from "./prisma";
 import type { ChainKey } from "./contracts";
 
-// ---- Domain types ----
+// ---- Domain types (preserved for backward compatibility) ----
 
 export type InvoiceStatus = "draft" | "open" | "paid" | "expired" | "void";
 
@@ -23,6 +33,12 @@ export type LineItem = {
 };
 
 export type InvoiceInput = {
+  /**
+   * Application-level merchant id. The `create` method below will resolve
+   * this to a real `Merchant.id` row. If no Merchant matches the caller's
+   * `merchantAddress`, a demo Merchant + User is created inline. See the
+   * comment on `create` for the rationale.
+   */
   merchantId: string;
   merchantAddress: `0x${string}`;
   /** Amount in token base units (e.g. USDC has 6 decimals). */
@@ -107,30 +123,7 @@ export interface Storage {
   };
 }
 
-// ---- In-memory implementation ----
-//
-// Module-level Maps. Survives across HMR in dev because of the
-// globalThis cache below. In production this resets on every cold start,
-// which is fine because this is meant as a placeholder.
-
-type Globals = typeof globalThis & {
-  __blockpayInvoices?: Map<string, Invoice>;
-  __blockpayInvoicesByOnChain?: Map<string, string>; // onChainId -> id
-  __blockpayPayments?: Map<string, PaymentRecord>;
-};
-
-const g = globalThis as Globals;
-
-const invoicesById: Map<string, Invoice> =
-  g.__blockpayInvoices ?? new Map<string, Invoice>();
-const invoicesByOnChain: Map<string, string> =
-  g.__blockpayInvoicesByOnChain ?? new Map<string, string>();
-const paymentsById: Map<string, PaymentRecord> =
-  g.__blockpayPayments ?? new Map<string, PaymentRecord>();
-
-g.__blockpayInvoices = invoicesById;
-g.__blockpayInvoicesByOnChain = invoicesByOnChain;
-g.__blockpayPayments = paymentsById;
+// ---- Helpers ----
 
 function randomId(prefix: string): string {
   const bytes = new Uint8Array(12);
@@ -149,57 +142,173 @@ function randomOnChainInvoiceId(): `0x${string}` {
   )}` as `0x${string}`;
 }
 
+function as0x(v: string): `0x${string}` {
+  return (v.startsWith("0x") ? v : `0x${v}`) as `0x${string}`;
+}
+
+type PrismaInvoiceWithPayments = PrismaInvoice & { payments?: PrismaPayment[] };
+
+function rowToInvoice(row: PrismaInvoiceWithPayments): Invoice {
+  // Synthesize the `settlement` blob from the most recent recorded Payment
+  // so callers that used to read `invoice.settlement` keep working.
+  const latestPayment = row.payments?.[0];
+  const settlement: SettlementRecord | undefined = latestPayment
+    ? {
+        txHash: as0x(latestPayment.txHash),
+        blockNumber: Number(latestPayment.blockNumber),
+        logIndex: latestPayment.logIndex,
+        payer: as0x(latestPayment.payer),
+        amount: latestPayment.amount,
+        feeAmount: latestPayment.feeAmount,
+        settledAt: latestPayment.blockTimestamp.getTime(),
+      }
+    : undefined;
+
+  return {
+    id: row.id,
+    onChainInvoiceId: as0x(row.onChainInvoiceId),
+    merchantId: row.merchantId,
+    merchantAddress: as0x(row.merchantAddress),
+    amount: row.amount,
+    currency: row.currency as "USDC" | "EURC",
+    chainKey: row.chainKey as ChainKey,
+    lineItems: (row.lineItems as unknown as LineItem[]) ?? [],
+    memoCid: row.memoCid ? as0x(row.memoCid) : undefined,
+    expiresAt: row.expiresAt ? row.expiresAt.getTime() : undefined,
+    status: row.status as InvoiceStatus,
+    createdAt: row.createdAt.getTime(),
+    updatedAt: row.updatedAt.getTime(),
+    settlement,
+  };
+}
+
+function rowToPayment(row: PrismaPayment): PaymentRecord {
+  return {
+    id: `${row.chainKey}:${row.txHash.toLowerCase()}:${row.logIndex}`,
+    chainKey: row.chainKey as ChainKey,
+    onChainInvoiceId: as0x(row.onChainInvoiceId ?? "0x"),
+    invoiceId: row.invoiceId ?? undefined,
+    merchantId: undefined,
+    merchantAddress: as0x(row.merchantAddress),
+    payer: as0x(row.payer),
+    token: as0x(row.tokenAddress),
+    amount: row.amount,
+    feeAmount: row.feeAmount,
+    memoCid: as0x(row.memoCid ?? "0x"),
+    txHash: as0x(row.txHash),
+    blockNumber: Number(row.blockNumber),
+    logIndex: row.logIndex,
+    recordedAt: row.recordedAt.getTime(),
+  };
+}
+
+/**
+ * Resolve (or create) a Merchant row keyed on a settlement address.
+ *
+ * NOTE(demo-fallback): The unauth E2E tests and the public landing-page
+ * "Create demo invoice" button POST to /api/invoices without signing in,
+ * so the caller does not yet have a Merchant row. We materialize a "demo"
+ * Merchant + User on the fly to keep those code paths working. Remove this
+ * fallback once signup is mandatory and the API requires an authenticated
+ * session.
+ */
+async function resolveMerchantId(
+  settlementAddress: string,
+  chainKey: string,
+): Promise<string> {
+  const addrLc = settlementAddress.toLowerCase();
+  const existing = await prisma.merchant.findFirst({
+    where: { settlementAddress: addrLc },
+  });
+  if (existing) return existing.id;
+
+  // Demo fallback: create a placeholder User + Merchant tied to this address.
+  const demoUser = await prisma.user.create({
+    data: {
+      walletAddress: `${addrLc}-demo-${Date.now()}`,
+    },
+  });
+  const created = await prisma.merchant.create({
+    data: {
+      userId: demoUser.id,
+      businessName: "Demo Merchant",
+      settlementAddress: addrLc,
+      settlementChainKey: chainKey,
+      settlementCurrency: "USDC",
+    },
+  });
+  return created.id;
+}
+
+// ---- Implementation ----
+
 export const storage: Storage = {
   invoices: {
     async create(input: InvoiceInput): Promise<Invoice> {
-      const now = Date.now();
+      const merchantId = await resolveMerchantId(
+        input.merchantAddress,
+        input.chainKey,
+      );
+
       const id = randomId("inv");
       const onChainInvoiceId = randomOnChainInvoiceId();
-      const invoice: Invoice = {
-        id,
-        onChainInvoiceId,
-        merchantId: input.merchantId,
-        merchantAddress: input.merchantAddress,
-        amount: input.amount,
-        currency: input.currency,
-        chainKey: input.chainKey,
-        lineItems: input.lineItems,
-        memoCid: input.memoCid,
-        expiresAt: input.expiresAt,
-        status: "open",
-        createdAt: now,
-        updatedAt: now,
-      };
-      invoicesById.set(id, invoice);
-      invoicesByOnChain.set(onChainInvoiceId.toLowerCase(), id);
-      return invoice;
+
+      const row = await prisma.invoice.create({
+        data: {
+          id,
+          merchantId,
+          onChainInvoiceId: onChainInvoiceId.toLowerCase(),
+          merchantAddress: input.merchantAddress.toLowerCase(),
+          amount: input.amount,
+          currency: input.currency,
+          chainKey: input.chainKey,
+          lineItems: input.lineItems as unknown as object,
+          memoCid: input.memoCid ? input.memoCid.toLowerCase() : null,
+          status: "open",
+          expiresAt: input.expiresAt ? new Date(input.expiresAt) : null,
+        },
+      });
+
+      return rowToInvoice(row);
     },
 
     async get(id: string): Promise<Invoice | null> {
-      return invoicesById.get(id) ?? null;
+      const row = await prisma.invoice.findUnique({
+        where: { id },
+        include: {
+          payments: { orderBy: { recordedAt: "desc" }, take: 1 },
+        },
+      });
+      return row ? rowToInvoice(row) : null;
     },
 
     async getByOnChainId(
       invoiceIdHex: `0x${string}`,
     ): Promise<Invoice | null> {
-      const id = invoicesByOnChain.get(invoiceIdHex.toLowerCase());
-      if (!id) return null;
-      return invoicesById.get(id) ?? null;
+      const row = await prisma.invoice.findUnique({
+        where: { onChainInvoiceId: invoiceIdHex.toLowerCase() },
+        include: {
+          payments: { orderBy: { recordedAt: "desc" }, take: 1 },
+        },
+      });
+      return row ? rowToInvoice(row) : null;
     },
 
     async list(filter?: {
       merchantId?: string;
       status?: InvoiceStatus;
     }): Promise<Invoice[]> {
-      const all = Array.from(invoicesById.values());
-      const filtered = all.filter((inv) => {
-        if (filter?.merchantId && inv.merchantId !== filter.merchantId)
-          return false;
-        if (filter?.status && inv.status !== filter.status) return false;
-        return true;
+      const rows = await prisma.invoice.findMany({
+        where: {
+          ...(filter?.merchantId ? { merchantId: filter.merchantId } : {}),
+          ...(filter?.status ? { status: filter.status } : {}),
+        },
+        orderBy: { createdAt: "desc" },
+        include: {
+          payments: { orderBy: { recordedAt: "desc" }, take: 1 },
+        },
       });
-      filtered.sort((a, b) => b.createdAt - a.createdAt);
-      return filtered;
+      return rows.map(rowToInvoice);
     },
 
     async updateStatus(
@@ -207,44 +316,101 @@ export const storage: Storage = {
       status: InvoiceStatus,
       settlement?: SettlementRecord,
     ): Promise<Invoice> {
-      const existing = invoicesById.get(id);
-      if (!existing) {
-        throw new Error(`invoice_not_found`);
-      }
-      const updated: Invoice = {
-        ...existing,
-        status,
-        settlement: settlement ?? existing.settlement,
-        updatedAt: Date.now(),
-      };
-      invoicesById.set(id, updated);
-      return updated;
+      const row = await prisma.invoice.update({
+        where: { id },
+        data: {
+          status,
+          paidAt:
+            status === "paid"
+              ? settlement
+                ? new Date(settlement.settledAt)
+                : new Date()
+              : undefined,
+        },
+        include: {
+          payments: { orderBy: { recordedAt: "desc" }, take: 1 },
+        },
+      });
+      return rowToInvoice(row);
     },
   },
 
   payments: {
     async record(p: PaymentRecord): Promise<PaymentRecord> {
-      paymentsById.set(p.id, p);
-      return p;
+      const row = await prisma.payment.upsert({
+        where: {
+          chainKey_txHash_logIndex: {
+            chainKey: p.chainKey,
+            txHash: p.txHash.toLowerCase(),
+            logIndex: p.logIndex,
+          },
+        },
+        create: {
+          invoiceId: p.invoiceId ?? null,
+          onChainInvoiceId: p.onChainInvoiceId.toLowerCase(),
+          chainKey: p.chainKey,
+          txHash: p.txHash.toLowerCase(),
+          logIndex: p.logIndex,
+          payer: p.payer.toLowerCase(),
+          merchantAddress: p.merchantAddress.toLowerCase(),
+          tokenAddress: p.token.toLowerCase(),
+          amount: p.amount,
+          feeAmount: p.feeAmount,
+          memoCid: p.memoCid.toLowerCase(),
+          blockNumber: BigInt(p.blockNumber),
+          blockTimestamp: new Date(p.recordedAt),
+        },
+        update: {},
+      });
+      return rowToPayment(row);
     },
 
     async list(filter?: {
       merchantId?: string;
       chainKey?: ChainKey;
     }): Promise<PaymentRecord[]> {
-      const all = Array.from(paymentsById.values());
-      const filtered = all.filter((p) => {
-        if (filter?.merchantId && p.merchantId !== filter.merchantId)
-          return false;
-        if (filter?.chainKey && p.chainKey !== filter.chainKey) return false;
-        return true;
+      // `merchantId` filter: resolve to the merchant's settlementAddress so
+      // we can match Payment.merchantAddress (Payment doesn't FK to Merchant
+      // directly).
+      let merchantAddressFilter: string | undefined;
+      if (filter?.merchantId) {
+        const merchant = await prisma.merchant.findUnique({
+          where: { id: filter.merchantId },
+        });
+        if (!merchant) return [];
+        merchantAddressFilter = merchant.settlementAddress.toLowerCase();
+      }
+
+      const rows = await prisma.payment.findMany({
+        where: {
+          ...(merchantAddressFilter
+            ? { merchantAddress: merchantAddressFilter }
+            : {}),
+          ...(filter?.chainKey ? { chainKey: filter.chainKey } : {}),
+        },
+        orderBy: { recordedAt: "desc" },
       });
-      filtered.sort((a, b) => b.recordedAt - a.recordedAt);
-      return filtered;
+      return rows.map(rowToPayment);
     },
 
     async has(id: string): Promise<boolean> {
-      return paymentsById.has(id);
+      // id format: `${chainKey}:${txHash}:${logIndex}`
+      const parts = id.split(":");
+      if (parts.length !== 3) return false;
+      const [chainKey, txHash, logIndexStr] = parts;
+      const logIndex = Number(logIndexStr);
+      if (!Number.isFinite(logIndex)) return false;
+      const row = await prisma.payment.findUnique({
+        where: {
+          chainKey_txHash_logIndex: {
+            chainKey,
+            txHash: txHash.toLowerCase(),
+            logIndex,
+          },
+        },
+        select: { id: true },
+      });
+      return row !== null;
     },
   },
 };

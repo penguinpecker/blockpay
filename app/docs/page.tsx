@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ChevronRight, Zap, Code, Package, Webhook, Plug, BookOpen } from "lucide-react";
+import { ChevronRight, Zap, Code, Package, Webhook, ShoppingBag, Boxes } from "lucide-react";
 import { Nav } from "@/components/nav";
 import { Footer } from "@/components/footer";
 
@@ -16,22 +16,22 @@ const cards: DocCard[] = [
     Icon: Zap,
     title: "Quick Start",
     body: "Take your first stablecoin payment in five minutes. Install the SDK, paste your wallet address, render the checkout button.",
-    href: "/docs",
+    href: "/docs/quick-start",
     cta: "Read the guide",
   },
   {
     Icon: Code,
     title: "API Reference",
     body: "Every endpoint, request shape, response envelope and error code. Versioned, OpenAPI-described, batteries included.",
-    href: "/docs",
+    href: "/docs/api",
     cta: "Browse endpoints",
   },
   {
     Icon: Package,
-    title: "SDK & Plugins",
-    body: "Drop-in React, Vue and vanilla components. Shopify, WooCommerce and Magento plugins. Server SDKs for Node, Python and Go.",
-    href: "/docs",
-    cta: "See packages",
+    title: "SDK Reference",
+    body: "The complete @blockpay/checkout surface — invoices, payment links, signed receipts, and webhook verification helpers.",
+    href: "/docs/sdk",
+    cta: "Open the SDK docs",
   },
 ];
 
@@ -39,17 +39,20 @@ const sideTopics = [
   {
     Icon: Webhook,
     title: "Webhooks",
-    body: "Subscribe to payment.succeeded, payment.refunded, payout.completed and 24 more.",
+    body: "Subscribe to invoice.paid, payment.received, payment.refunded and more — every event signed with HMAC.",
+    href: "/docs/webhooks",
   },
   {
-    Icon: Plug,
-    title: "Plugins",
-    body: "Shopify, WooCommerce, Magento and OpenCart with no-code setup flows.",
+    Icon: ShoppingBag,
+    title: "Shopify",
+    body: "Seven-step install for any Shopify store. No code, no DNS, no engineering ticket.",
+    href: "/docs/shopify",
   },
   {
-    Icon: BookOpen,
-    title: "Concepts",
-    body: "Mental models for paymasters, CCTP routing, allowances and signed receipts.",
+    Icon: Boxes,
+    title: "WooCommerce",
+    body: "Drop our plugin into any WordPress store running WooCommerce 7.0+. Six clicks to a live USDC gateway.",
+    href: "/docs/wordpress",
   },
 ];
 
@@ -96,11 +99,11 @@ export default function DocsPage() {
                   fits on a postcard — and the postcard is below.
                 </p>
                 <div className="mt-10 flex flex-wrap gap-3">
-                  <Link href="/docs" className="btn-pill-solid text-sm">
+                  <Link href="/docs/quick-start" className="btn-pill-solid text-sm">
                     Quick start
                     <ChevronRight size={16} strokeWidth={2.4} />
                   </Link>
-                  <Link href="/docs" className="btn-pill text-sm">
+                  <Link href="/docs/api" className="btn-pill text-sm">
                     API reference
                     <ChevronRight size={16} strokeWidth={2.4} />
                   </Link>
@@ -146,7 +149,7 @@ export default function DocsPage() {
                   our docs. Concepts first, then concrete recipes.
                 </p>
                 <div className="mt-8">
-                  <Link href="/docs" className="btn-pill text-sm">
+                  <Link href="/docs/sdk" className="btn-pill text-sm">
                     All docs
                     <ChevronRight size={16} strokeWidth={2.4} />
                   </Link>
@@ -156,9 +159,10 @@ export default function DocsPage() {
                 {sideTopics.map((t) => {
                   const Icon = t.Icon;
                   return (
-                    <div
+                    <Link
                       key={t.title}
-                      className="card-frame-tight flex items-start gap-4 px-6 py-5"
+                      href={t.href}
+                      className="card-frame-tight group flex items-start gap-4 px-6 py-5 transition-colors hover:border-[rgba(74,222,128,0.45)]"
                     >
                       <span
                         className="mt-[2px] inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-[rgba(74,222,128,0.3)] bg-[rgba(74,222,128,0.08)] text-[#4ade80]"
@@ -172,7 +176,7 @@ export default function DocsPage() {
                         </div>
                         <div className="mt-1 text-sm text-zinc-400">{t.body}</div>
                       </div>
-                    </div>
+                    </Link>
                   );
                 })}
               </div>
@@ -194,7 +198,7 @@ export default function DocsPage() {
                 Contact support
                 <ChevronRight size={16} strokeWidth={2.4} />
               </Link>
-              <Link href="/docs" className="btn-pill text-sm">
+              <Link href="/docs/quick-start" className="btn-pill text-sm">
                 Browse the docs
                 <ChevronRight size={16} strokeWidth={2.4} />
               </Link>

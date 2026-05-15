@@ -1,0 +1,148 @@
+// BlockPay database schema. Runs against Railway Postgres.
+// Includes Auth.js v5 (NextAuth) tables + BlockPay merchant / invoice / payment.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ----- Auth.js (NextAuth v5) -----
+
+model User {
+  id            String    @id @default(cuid())
+  email         String?   @unique
+  emailVerified DateTime?
+  name          String?
+  image         String?
+  walletAddress String?   @unique
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  accounts Account[]
+  sessions Session[]
+  merchant Merchant?
+
+  @@index([walletAddress])
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@index([userId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+// ----- BlockPay domain -----
+
+model Merchant {
+  id                  String   @id @default(cuid())
+  userId              String   @unique
+  businessName        String
+  settlementAddress   String
+  settlementChainKey  String
+  settlementCurrency  String
+  volumeEstimate      String?
+  apiKeyHash          String?  @unique
+  webhookUrl          String?
+  webhookSecret       String?
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  invoices Invoice[]
+
+  @@index([settlementAddress])
+}
+
+enum InvoiceStatus {
+  draft
+  open
+  paid
+  expired
+  void
+}
+
+model Invoice {
+  id               String        @id
+  merchantId       String
+  onChainInvoiceId String        @unique
+  merchantAddress  String
+  amount           String
+  currency         String
+  chainKey         String
+  lineItems        Json
+  memoCid          String?
+  status           InvoiceStatus @default(open)
+  expiresAt        DateTime?
+  paidAt           DateTime?
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+
+  merchant Merchant  @relation(fields: [merchantId], references: [id], onDelete: Cascade)
+  payments Payment[]
+
+  @@index([merchantId])
+  @@index([status])
+  @@index([onChainInvoiceId])
+}
+
+model Payment {
+  id               String   @id @default(cuid())
+  invoiceId        String?
+  onChainInvoiceId String?
+  chainKey         String
+  txHash           String
+  logIndex         Int
+  payer            String
+  merchantAddress  String
+  tokenAddress     String
+  amount           String
+  feeAmount        String
+  memoCid          String?
+  blockNumber      BigInt
+  blockTimestamp   DateTime
+  recordedAt       DateTime @default(now())
+
+  invoice Invoice? @relation(fields: [invoiceId], references: [id], onDelete: SetNull)
+
+  @@unique([chainKey, txHash, logIndex])
+  @@index([invoiceId])
+  @@index([merchantAddress])
+  @@index([chainKey])
+}

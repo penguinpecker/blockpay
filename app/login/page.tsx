@@ -1,8 +1,18 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
-import { CheckCircle2, ChevronRight, Mail, Wallet } from "lucide-react";
+import { Suspense, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { signIn } from "next-auth/react";
+import { SiweMessage } from "siwe";
+import {
+  CheckCircle2,
+  ChevronRight,
+  Mail,
+  Wallet,
+  Loader2,
+  AlertTriangle,
+} from "lucide-react";
 import { Nav } from "@/components/nav";
 import { Footer } from "@/components/footer";
 
@@ -11,13 +21,135 @@ type FormState = {
   password: string;
 };
 
+type SubmitState =
+  | { kind: "idle" }
+  | { kind: "submitting" }
+  | { kind: "wallet" }
+  | { kind: "success" }
+  | { kind: "error"; message: string };
+
+const inputCls =
+  "w-full rounded-xl border border-[rgba(74,222,128,0.22)] bg-[rgba(8,14,10,0.7)] px-4 py-3 text-sm text-white placeholder:text-zinc-500 outline-none transition-colors focus:border-[rgba(74,222,128,0.6)]";
+
+function Field({
+  label,
+  htmlFor,
+  children,
+}: {
+  label: string;
+  htmlFor: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <label htmlFor={htmlFor} className="block">
+      <span className="mb-2 block text-xs uppercase tracking-[0.16em] text-zinc-500">
+        {label}
+      </span>
+      {children}
+    </label>
+  );
+}
+
 export default function LoginPage() {
+  return (
+    <Suspense fallback={null}>
+      <LoginPageInner />
+    </Suspense>
+  );
+}
+
+function LoginPageInner() {
   const [form, setForm] = useState<FormState>({ email: "", password: "" });
-  const [submitted, setSubmitted] = useState(false);
+  const [state, setState] = useState<SubmitState>({ kind: "idle" });
+  const router = useRouter();
+  const params = useSearchParams();
+  const next = params.get("from") || "/dashboard";
 
   function update<K extends keyof FormState>(key: K, value: FormState[K]) {
     setForm((prev) => ({ ...prev, [key]: value }));
   }
+
+  async function handleEmailSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setState({ kind: "submitting" });
+    try {
+      const result = await signIn("demo-email", {
+        email: form.email,
+        redirect: false,
+      });
+      if (result?.error) {
+        setState({ kind: "error", message: "Sign-in failed. Try again." });
+        return;
+      }
+      setState({ kind: "success" });
+      router.push(next);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Unknown error";
+      setState({ kind: "error", message: msg });
+    }
+  }
+
+  async function handleWallet() {
+    if (typeof window === "undefined" || !window.ethereum) {
+      setState({
+        kind: "error",
+        message: "No injected wallet. Install MetaMask or a compatible wallet.",
+      });
+      return;
+    }
+    setState({ kind: "wallet" });
+    try {
+      const eth = window.ethereum as {
+        request: (args: { method: string; params?: unknown[] }) => Promise<unknown>;
+      };
+      const accounts = (await eth.request({ method: "eth_requestAccounts" })) as string[];
+      if (!accounts || accounts.length === 0) {
+        setState({ kind: "error", message: "Wallet returned no account." });
+        return;
+      }
+      const address = accounts[0];
+      const chainIdHex = (await eth.request({ method: "eth_chainId" })) as string;
+      const chainId = parseInt(chainIdHex, 16);
+
+      const nonceRes = await fetch("/api/auth/siwe-nonce");
+      const { nonce } = (await nonceRes.json()) as { nonce: string };
+
+      const message = new SiweMessage({
+        domain: window.location.host,
+        address,
+        statement: "Sign in to BlockPay merchant dashboard.",
+        uri: window.location.origin,
+        version: "1",
+        chainId,
+        nonce,
+        issuedAt: new Date().toISOString(),
+      });
+      const prepared = message.prepareMessage();
+      const signature = (await eth.request({
+        method: "personal_sign",
+        params: [prepared, address],
+      })) as string;
+
+      const result = await signIn("siwe", {
+        message: JSON.stringify(message),
+        signature,
+        redirect: false,
+      });
+      if (result?.error) {
+        setState({ kind: "error", message: "SIWE verification failed." });
+        return;
+      }
+      setState({ kind: "success" });
+      router.push(next);
+    } catch (err) {
+      const msg =
+        err instanceof Error ? err.message.split("\n")[0] : "Wallet sign-in failed";
+      setState({ kind: "error", message: msg });
+    }
+  }
+
+  const submitted = state.kind === "success";
+  const busy = state.kind === "submitting" || state.kind === "wallet";
 
   return (
     <>
@@ -51,33 +183,15 @@ export default function LoginPage() {
                   <CheckCircle2 size={26} strokeWidth={2} />
                 </span>
                 <h2 className="mt-6 font-display text-2xl font-semibold tracking-tight md:text-3xl">
-                  Magic link <span className="text-accent">sent</span>
+                  Signed <span className="text-accent">in</span>
                 </h2>
                 <p className="mx-auto mt-3 max-w-sm text-sm text-zinc-400">
-                  Check your email — we sent a sign-in link to{" "}
-                  <span className="text-white">{form.email || "your inbox"}</span>.
-                  It will expire in 15 minutes.
+                  Routing you to the dashboard.
                 </p>
-                <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
-                  <button
-                    type="button"
-                    onClick={() => setSubmitted(false)}
-                    className="btn-pill text-sm"
-                  >
-                    Use a different email
-                    <ChevronRight size={16} strokeWidth={2.4} />
-                  </button>
-                </div>
               </div>
             ) : (
               <div className="card-frame p-7 md:p-10">
-                <form
-                  onSubmit={(e) => {
-                    e.preventDefault();
-                    setSubmitted(true);
-                  }}
-                  className="grid gap-5"
-                >
+                <form onSubmit={handleEmailSubmit} className="grid gap-5">
                   <Field label="Email" htmlFor="email">
                     <input
                       id="email"
@@ -97,9 +211,8 @@ export default function LoginPage() {
                       id="password"
                       name="password"
                       type="password"
-                      required
                       autoComplete="current-password"
-                      placeholder="••••••••"
+                      placeholder="(any value during the testnet demo)"
                       value={form.password}
                       onChange={(e) => update("password", e.target.value)}
                       className={inputCls}
@@ -108,9 +221,14 @@ export default function LoginPage() {
 
                   <button
                     type="submit"
-                    className="btn-pill-solid mt-2 justify-center text-sm"
+                    disabled={busy}
+                    className="btn-pill-solid mt-2 justify-center text-sm disabled:cursor-not-allowed disabled:opacity-70"
                   >
-                    <Mail size={16} strokeWidth={2.2} />
+                    {state.kind === "submitting" ? (
+                      <Loader2 size={16} className="animate-spin" />
+                    ) : (
+                      <Mail size={16} strokeWidth={2.2} />
+                    )}
                     Log in
                     <ChevronRight size={16} strokeWidth={2.4} />
                   </button>
@@ -126,17 +244,28 @@ export default function LoginPage() {
 
                 <button
                   type="button"
-                  onClick={(e) => e.preventDefault()}
-                  className="btn-pill w-full justify-center text-sm"
+                  onClick={handleWallet}
+                  disabled={busy}
+                  className="btn-pill w-full justify-center text-sm disabled:cursor-not-allowed disabled:opacity-70"
                 >
-                  <Wallet size={16} strokeWidth={2.2} />
+                  {state.kind === "wallet" ? (
+                    <Loader2 size={16} className="animate-spin" />
+                  ) : (
+                    <Wallet size={16} strokeWidth={2.2} />
+                  )}
                   Continue with wallet
                   <ChevronRight size={16} strokeWidth={2.4} />
                 </button>
                 <p className="mt-3 text-center text-xs text-zinc-500">
-                  We&apos;ll route this through the BlockPay merchant dashboard
-                  once you&apos;re approved.
+                  Sign-In With Ethereum (EIP-4361). No password — your wallet signs a message.
                 </p>
+
+                {state.kind === "error" && (
+                  <div className="mt-5 flex items-start gap-2 rounded-xl border border-amber-500/30 bg-amber-500/[0.06] px-4 py-3 text-xs text-amber-300">
+                    <AlertTriangle size={14} className="mt-[2px] shrink-0" />
+                    <span>{state.message}</span>
+                  </div>
+                )}
 
                 <p className="mt-7 text-center text-sm text-zinc-400">
                   Don&apos;t have an account?{" "}
@@ -154,27 +283,5 @@ export default function LoginPage() {
       </main>
       <Footer />
     </>
-  );
-}
-
-const inputCls =
-  "w-full rounded-xl border border-[rgba(74,222,128,0.22)] bg-[rgba(8,14,10,0.7)] px-4 py-3 text-sm text-white placeholder:text-zinc-500 outline-none transition-colors focus:border-[rgba(74,222,128,0.6)]";
-
-function Field({
-  label,
-  htmlFor,
-  children,
-}: {
-  label: string;
-  htmlFor: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <label htmlFor={htmlFor} className="block">
-      <span className="mb-2 block text-xs uppercase tracking-[0.16em] text-zinc-500">
-        {label}
-      </span>
-      {children}
-    </label>
   );
 }

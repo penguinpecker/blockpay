@@ -46,3 +46,5 @@ contracts/out/
 contracts/cache/
 contracts/broadcast/*/run-*.json
 contracts/broadcast/*/*/run-*.json
+
+/lib/generated/prisma

@@ -2,7 +2,7 @@
  * BlockPay on-chain indexer.
  *
  * Polls the deployed BlockPayRouter on each supported chain for `Settled`
- * events and writes matching payments to the storage layer. Designed to
+ * events and writes matching payments to Postgres via Prisma. Designed to
  * run from a manual trigger (route handler) or a cron in production. The
  * default scan window is 5,000 blocks back from the latest tip; that is
  * tuned for testnets and should be reduced for high-throughput chains.
@@ -11,7 +11,7 @@
 import { parseEventLogs, type Log } from "viem";
 import { CHAINS, type ChainKey, type ChainConfig } from "./contracts";
 import { ROUTER_ABI, publicClientFor } from "./web3";
-import { storage, type PaymentRecord } from "./storage";
+import { prisma } from "./prisma";
 
 const DEFAULT_SCAN_WINDOW = BigInt(5000);
 const ZERO = BigInt(0);
@@ -37,12 +37,40 @@ type SettledArgs = {
   memoCid: `0x${string}`;
 };
 
-function paymentIdFor(
+/**
+ * Resolve (or create) a Merchant row keyed on a settlement address.
+ *
+ * NOTE(demo-fallback): Mirrors the demo-fallback in `lib/storage.ts`. If an
+ * on-chain Settled event references a merchant address we've never seen
+ * before (e.g. local test deployments using a throw-away wallet) we still
+ * record the payment under a placeholder Merchant so the indexer keeps
+ * making progress. Remove once signup is mandatory.
+ */
+async function resolveMerchantIdByAddress(
+  settlementAddress: string,
   chainKey: ChainKey,
-  txHash: `0x${string}`,
-  logIndex: number,
-): string {
-  return `${chainKey}:${txHash.toLowerCase()}:${logIndex}`;
+): Promise<string> {
+  const addrLc = settlementAddress.toLowerCase();
+  const existing = await prisma.merchant.findFirst({
+    where: { settlementAddress: addrLc },
+  });
+  if (existing) return existing.id;
+
+  const demoUser = await prisma.user.create({
+    data: {
+      walletAddress: `${addrLc}-demo-${Date.now()}`,
+    },
+  });
+  const created = await prisma.merchant.create({
+    data: {
+      userId: demoUser.id,
+      businessName: "Demo Merchant",
+      settlementAddress: addrLc,
+      settlementChainKey: chainKey,
+      settlementCurrency: "USDC",
+    },
+  });
+  return created.id;
 }
 
 export async function indexChain(
@@ -120,44 +148,71 @@ export async function indexChain(
       continue;
     }
 
-    const id = paymentIdFor(chainKey, txHash, logIndex);
-    if (await storage.payments.has(id)) {
-      skipped += 1;
-      continue;
+    // Fetch the block to anchor the payment's timestamp on-chain rather
+    // than at recording time. If the call fails we fall back to `now`.
+    let blockTimestamp = new Date();
+    try {
+      const block = await client.getBlock({ blockNumber });
+      blockTimestamp = new Date(Number(block.timestamp) * 1000);
+    } catch {
+      // keep fallback
     }
 
-    const invoice = await storage.invoices.getByOnChainId(args.invoiceId);
+    const invoice = await prisma.invoice.findUnique({
+      where: { onChainInvoiceId: args.invoiceId.toLowerCase() },
+    });
 
-    const record: PaymentRecord = {
-      id,
-      chainKey,
-      onChainInvoiceId: args.invoiceId,
-      invoiceId: invoice?.id,
-      merchantId: invoice?.merchantId,
-      merchantAddress: args.merchant,
-      payer: args.payer,
-      token: args.token,
-      amount: args.amount.toString(),
-      feeAmount: args.feeAmount.toString(),
-      memoCid: args.memoCid,
-      txHash,
-      blockNumber: Number(blockNumber),
-      logIndex,
-      recordedAt: Date.now(),
-    };
+    // Resolve the merchant id: prefer the invoice's merchant, fall back
+    // to a lookup by settlement address (creating a demo Merchant if
+    // needed). The merchant id isn't stored on Payment directly but the
+    // lookup ensures the address exists in our system before we record.
+    if (!invoice) {
+      await resolveMerchantIdByAddress(args.merchant, chainKey);
+    }
 
-    await storage.payments.record(record);
-    recorded += 1;
-
-    if (invoice && invoice.status !== "paid") {
-      await storage.invoices.updateStatus(invoice.id, "paid", {
-        txHash,
-        blockNumber: Number(blockNumber),
+    const result = await prisma.payment.upsert({
+      where: {
+        chainKey_txHash_logIndex: {
+          chainKey,
+          txHash: txHash.toLowerCase(),
+          logIndex,
+        },
+      },
+      create: {
+        invoiceId: invoice?.id ?? null,
+        onChainInvoiceId: args.invoiceId.toLowerCase(),
+        chainKey,
+        txHash: txHash.toLowerCase(),
         logIndex,
-        payer: args.payer,
+        payer: args.payer.toLowerCase(),
+        merchantAddress: args.merchant.toLowerCase(),
+        tokenAddress: args.token.toLowerCase(),
         amount: args.amount.toString(),
         feeAmount: args.feeAmount.toString(),
-        settledAt: Date.now(),
+        memoCid: args.memoCid.toLowerCase(),
+        blockNumber: BigInt(blockNumber),
+        blockTimestamp,
+      },
+      update: {},
+    });
+
+    // Crude "was this newly inserted" check: a freshly-created row has
+    // recordedAt within the last few seconds. Good enough for the
+    // counter; the actual side effect is idempotent regardless.
+    const isNew = Date.now() - result.recordedAt.getTime() < 5000;
+    if (isNew) {
+      recorded += 1;
+    } else {
+      skipped += 1;
+    }
+
+    if (invoice && invoice.status !== "paid") {
+      await prisma.invoice.update({
+        where: { id: invoice.id },
+        data: {
+          status: "paid",
+          paidAt: blockTimestamp,
+        },
       });
     }
   }
