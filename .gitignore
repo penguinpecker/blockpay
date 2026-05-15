@@ -39,3 +39,10 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+.entity-secret.recovery
+
+# Foundry artifacts (under contracts/)
+contracts/out/
+contracts/cache/
+contracts/broadcast/*/run-*.json
+contracts/broadcast/*/*/run-*.json

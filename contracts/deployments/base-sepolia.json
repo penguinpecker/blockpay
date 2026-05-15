@@ -1,0 +1,37 @@
+{
+  "chain": "base-sepolia",
+  "chainId": 84532,
+  "deployedAt": "2026-05-15T11:30:00+05:30",
+  "deployer": "0x9D6D4CbD170Ea0CeabcAD69f16917669Dfa11e14",
+  "contracts": {
+    "BlockPayRouter": {
+      "address": "0x50a2a3684F1df4db9A58C21febaf23D6b7DC8B2F",
+      "deployTxHash": "0x90262b821c75ad696472d61ac31d8a1c4bf21ceaba0d1c99880d6660affdb1ca",
+      "constructorArgs": {
+        "initialOwner": "0x9D6D4CbD170Ea0CeabcAD69f16917669Dfa11e14",
+        "initialFeeRecipient": "0x9D6D4CbD170Ea0CeabcAD69f16917669Dfa11e14",
+        "initialFeeBps": 50
+      },
+      "explorer": "https://sepolia.basescan.org/address/0x50a2a3684F1df4db9A58C21febaf23D6b7DC8B2F"
+    },
+    "TestUSDC_e2e": {
+      "address": "0x933f5D203eE94B29DE7bAe183D5Ff6032Bf8862B",
+      "explorer": "https://sepolia.basescan.org/address/0x933f5D203eE94B29DE7bAe183D5Ff6032Bf8862B",
+      "note": "Mock USDC used only for the live e2e proof-of-life test"
+    }
+  },
+  "liveTests": {
+    "e2ePayment": {
+      "invoice": "deterministic from blockpay-e2e-1 + timestamp",
+      "merchant": "0x93c984f976569bccEaDBB6e973E0f7d62A8aD217",
+      "amountTUSDC": 100,
+      "feeBps": 50,
+      "expectedSplit": {
+        "feeRecipient": "0.5 tUSDC",
+        "merchant": "99.5 tUSDC",
+        "routerResidue": "0 (verified)"
+      },
+      "result": "PASS"
+    }
+  }
+}

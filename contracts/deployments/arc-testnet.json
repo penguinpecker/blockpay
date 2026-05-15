@@ -1,0 +1,29 @@
+{
+  "chain": "arc-testnet",
+  "chainId": 5042002,
+  "deployedAt": "2026-05-15T12:00:00+05:30",
+  "deployer": "0x9D6D4CbD170Ea0CeabcAD69f16917669Dfa11e14",
+  "contracts": {
+    "BlockPayRouter": {
+      "address": "0x50a2a3684F1df4db9A58C21febaf23D6b7DC8B2F",
+      "deployTxHash": "0x7d406ca7ea28740e3f32564dd4d34102fd01becc726a863c4d1e35ef7de2794f",
+      "constructorArgs": {
+        "initialOwner": "0x9D6D4CbD170Ea0CeabcAD69f16917669Dfa11e14",
+        "initialFeeRecipient": "0x9D6D4CbD170Ea0CeabcAD69f16917669Dfa11e14",
+        "initialFeeBps": 50
+      },
+      "explorer": "https://explorer.testnet.arc.network/address/0x50a2a3684F1df4db9A58C21febaf23D6b7DC8B2F",
+      "note": "Same address as Base Sepolia deploy — deployer nonce 0 on both chains"
+    }
+  },
+  "liveTests": {
+    "e2ePayment": {
+      "result": "PASS",
+      "txs": [
+        "0x22e872f0620f1d4b4e8f301cf38d0deec6c33b6feadaaa9eb79881c7a1af85d3",
+        "0x87d24188c90d49f23660ea9c09e172a4407c1cc79a5584113aecc8f7eb5b1abf",
+        "0x7adc1fa9a79d045845a51dc629bc06ce914c97c9752b5af8496757ea4672f32c"
+      ]
+    }
+  }
+}
