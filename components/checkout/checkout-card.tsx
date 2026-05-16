@@ -33,6 +33,10 @@ import { type Address, type Hex, parseUnits, zeroAddress } from "viem";
 export type CheckoutCardProps = {
   merchantName?: string;
   invoiceId?: string;
+  /** 32-byte hex used as the on-chain invoiceId arg to Router.pay(). When
+   * set, overrides the random one — lets the indexer match the Settled
+   * event back to a real Invoice row by onChainInvoiceId. */
+  onChainInvoiceId?: `0x${string}`;
   lineItems?: ReceiptLine[];
   totalLabel?: string;
   /** Amount in USDC units (6-decimal precision). Defaults to 1 USDC for the demo. */
@@ -151,6 +155,7 @@ function stepsFor(status: Status, accountConnected: boolean): Step[] {
 export function CheckoutCard({
   merchantName = "Acme Storefront",
   invoiceId,
+  onChainInvoiceId,
   lineItems = DEFAULT_LINES,
   totalLabel = "$1.00 USDC",
   amountUsdc = parseUnits("1", 6),
@@ -320,7 +325,7 @@ export function CheckoutCard({
       }
 
       setStatus({ kind: "paying" });
-      const invoice = randomInvoiceId();
+      const invoice = onChainInvoiceId ?? randomInvoiceId();
       const payHash = await wallet.writeContract({
         account,
         chain: null,
