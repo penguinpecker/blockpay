@@ -15,7 +15,6 @@ import {
 
 const chains: ChainBalance[] = [
   { name: "Arc", amount: 1200, color: "#4ade80" },
-  { name: "Base", amount: 800, color: "#3b82f6" },
   { name: "Ethereum", amount: 400, color: "#a78bfa" },
   { name: "Solana", amount: 447.3, color: "#f59e0b" },
 ];

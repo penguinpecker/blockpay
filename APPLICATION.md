@@ -83,10 +83,8 @@ We've shipped live, real-money on-chain products end-to-end — not prototypes. 
 **Which other chains are you currently live on?**
 ```
 Live on testnet:
-- Base Sepolia (BlockPayRouter deployed at 0x50a2a3684F1df4db9A58C21febaf23D6b7DC8B2F)
-- Arc Testnet   (BlockPayRouter deployed at 0x50a2a3684F1df4db9A58C21febaf23D6b7DC8B2F, same address — same deployer nonce)
-End-to-end live payment proof completed on both testnets:
-- Base Sepolia deploy tx:   0x90262b821c75ad696472d61ac31d8a1c4bf21ceaba0d1c99880d6660affdb1ca
+- Arc Testnet   (BlockPayRouter deployed at 0x50a2a3684F1df4db9A58C21febaf23D6b7DC8B2F)
+End-to-end live payment proof completed on Arc Testnet:
 - Arc Testnet deploy tx:    0x7d406ca7ea28740e3f32564dd4d34102fd01becc726a863c4d1e35ef7de2794f
 - E2E payment result: merchant got 99.5 tUSDC, fee 0.5 tUSDC, router residue 0 (no dust)
 ```
@@ -110,12 +108,12 @@ End-to-end live payment proof completed on both testnets:
 ## Milestones
 
 **M1 — Core gateway + USDC + Paymaster (Month 1, COMPLETED at time of submission)**
-- Brief: Router contract + USDC payments + Circle Paymaster gasless checkout, live on Base Sepolia + Arc Testnet, end-to-end demo.
-- Detail: (1) BlockPayRouter.sol audited internally, deployed to Base Sepolia + Arc Testnet at `0x50a2a3684F1df4db9A58C21febaf23D6b7DC8B2F` from a single operator key (operator-first pattern), 14/14 tests passing + 256-run fuzz. (2) Circle Paymaster v0.8 wired via ERC-4337 + EIP-2612 USDC permit + Pimlico bundler; customer pays in USDC, never holds native gas. (3) End-to-end live payment proof: payer → router → 0.5% fee + 99.5% merchant, zero dust. (4) Embedded checkout widget live at https://blockpay-six.vercel.app/embed/preview connecting MetaMask, switching chain, executing real on-chain pay() calls. SUCCESS METRIC: external visitor can complete a testnet gasless payment from the live URL. **DONE.**
+- Brief: Router contract + USDC payments + Circle Paymaster gasless checkout, live on Arc Testnet, end-to-end demo.
+- Detail: (1) BlockPayRouter.sol audited internally, deployed to Arc Testnet at `0x50a2a3684F1df4db9A58C21febaf23D6b7DC8B2F` from a single operator key (operator-first pattern), 14/14 tests passing + 256-run fuzz. (2) Circle Paymaster v0.8 wired via ERC-4337 + EIP-2612 USDC permit + Pimlico bundler; customer pays in USDC, never holds native gas. (3) End-to-end live payment proof: payer → router → 0.5% fee + 99.5% merchant, zero dust. (4) Embedded checkout widget live at https://blockpay-six.vercel.app/embed/preview connecting MetaMask, switching chain, executing real on-chain pay() calls. SUCCESS METRIC: external visitor can complete a testnet gasless payment from the live URL. **DONE.**
 
 **M2 — Shopify app + WordPress plugin + Arc mainnet (Month 2-3)**
-- Brief: Shopify App Store approval + WordPress plugin published + mainnet launch on Arc + Base. 3 live merchants processing real USDC.
-- Detail: (1) Shopify App submitted to and approved by the Shopify App Store. (2) WordPress plugin published to WordPress.org with WooCommerce hook. (3) Mainnet deploy on Arc + Base with 2/3 multisig admin, multisig handoff at the literal last on-chain step. (4) Merchant dashboard v1 — invoices, payment links, refunds, accounting exports. (5) 3 paying merchants onboarded. SUCCESS METRIC: $10K+ in live merchant USDC payment volume in month 3.
+- Brief: Shopify App Store approval + WordPress plugin published + Arc mainnet launch. 3 live merchants processing real USDC.
+- Detail: (1) Shopify App submitted to and approved by the Shopify App Store. (2) WordPress plugin published to WordPress.org with WooCommerce hook. (3) Arc mainnet deploy with 2/3 multisig admin, multisig handoff at the literal last on-chain step. (4) Merchant dashboard v1 — invoices, payment links, refunds, accounting exports. (5) 3 paying merchants onboarded. SUCCESS METRIC: $10K+ in live merchant USDC payment volume in month 3.
 
 **M3 — Cross-chain + Bridge Kit + EURC + Compliance (Month 4)**
 - Brief: CCTP cross-chain settlement, Bridge Kit any-token-in, EURC for EU merchants, Compliance Engine sanctions screening.
@@ -131,14 +129,14 @@ End-to-end live payment proof completed on both testnets:
 
 **Current traction:**
 ```
-Pre-revenue. Codebase live at github.com/[FILL] and product live at https://blockpay-six.vercel.app — visitors can connect a wallet, mint test USDC, execute a real on-chain payment through the BlockPayRouter on Base Sepolia, and see the rendered receipt. Two deployed contracts (Base Sepolia + Arc Testnet at the same address), 23 prerendered routes including a full merchant dashboard, mobile-first consumer app, marketing site, and embedded checkout widget. Founder has shipped prior production on-chain products at scale: PlayKaboom (live Solana mainnet, Squads 2/2 multisig), Fission Protocol (live Hedera mainnet).
+Pre-revenue. Codebase live at github.com/[FILL] and product live at https://blockpay-six.vercel.app — visitors can connect a wallet, mint test USDC, execute a real on-chain payment through the BlockPayRouter on Arc Testnet, and see the rendered receipt. One deployed contract (Arc Testnet), 23 prerendered routes including a full merchant dashboard, mobile-first consumer app, marketing site, and embedded checkout widget. Founder has shipped prior production on-chain products at scale: PlayKaboom (live Solana mainnet, Squads 2/2 multisig), Fission Protocol (live Hedera mainnet).
 ```
 
 **Are you funded?** No *(self-funded to date; this $10K grant is the first external capital)*
 
 **Technical Roadmap:**
 ```
-Month 1 (DONE): Router + USDC + Paymaster on Arc/Base testnets — M1 complete.
+Month 1 (DONE): Router + USDC + Paymaster on Arc Testnet — M1 complete.
 Month 2-3: Shopify App Store + WordPress plugin + Arc mainnet + 3 live merchants — M2.
 Month 4: CCTP cross-chain + Bridge Kit any-token-in + EURC + Compliance Engine — M3.
 Month 5-6: Receipts protocol + subscriptions + POS app + phonebook — M4.
@@ -196,5 +194,5 @@ $10K accelerates BlockPay from solo-founder testnet stage to a 6-month full-time
 - `~/Projects/blockpay/VIDEO_STORYBOARD.md` — 5-min technical demo script + recording checklist
 - `~/Projects/blockpay/decks/BlockPay-Circle-Grant-Cohort2.pptx` — Investor deck (in production)
 - `~/Projects/blockpay/contracts/REVIEW.md` — Internal review pass + audit-prep checklist
-- `~/Projects/blockpay/contracts/deployments/base-sepolia.json` — On-chain deploy manifest
-- `~/Projects/blockpay/contracts/deployments/arc-testnet.json` — On-chain deploy manifest
+- `~/Projects/blockpay/contracts/deployments/arc-testnet.json` — On-chain deploy manifest (Arc Testnet, current)
+- `~/Projects/blockpay/contracts/deployments/base-sepolia.json` — Historical Base Sepolia deploy manifest (no longer live)

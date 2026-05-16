@@ -13,9 +13,7 @@ import { prisma } from "@/lib/prisma";
 export const dynamic = "force-dynamic";
 
 const CHAIN_COLORS: Record<string, string> = {
-  "base-sepolia": "#4ade80",
   "arc-testnet": "#86efac",
-  base: "#22c55e",
   arc: "#16a34a",
   ethereum: "#15803d",
   optimism: "#f97316",

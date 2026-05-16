@@ -17,7 +17,7 @@ import { deliverWebhook, type WebhookEvent } from "./server-webhooks";
 
 const DEFAULT_SCAN_WINDOW = BigInt(5000);
 const ZERO = BigInt(0);
-const INDEXABLE_CHAINS: ChainKey[] = ["base-sepolia", "arc-testnet"];
+const INDEXABLE_CHAINS: ChainKey[] = ["arc-testnet"];
 
 export type IndexResult = {
   chainKey: ChainKey;

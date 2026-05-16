@@ -118,9 +118,7 @@ export function formatLongDate(d: Date): string {
  * Look up a friendly chain name from a chainKey. Falls back to the raw key.
  */
 const CHAIN_NAMES: Record<string, string> = {
-  "base-sepolia": "Base Sepolia",
   "arc-testnet": "Arc Testnet",
-  base: "Base",
   arc: "Arc",
   ethereum: "Ethereum",
   optimism: "Optimism",

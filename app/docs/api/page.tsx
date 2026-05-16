@@ -18,7 +18,7 @@ Content-Type: application/json
   "merchantAddress": "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
   "amount": "4900000",
   "currency": "USDC",
-  "chainKey": "base",
+  "chainKey": "arc-testnet",
   "lineItems": [
     { "label": "Pro Plan", "amount": "4900000" }
   ],
@@ -38,7 +38,7 @@ Content-Type: application/json
     "merchantAddress": "0xA0b8...eB48",
     "amount": "4900000",
     "currency": "USDC",
-    "chainKey": "base",
+    "chainKey": "arc-testnet",
     "status": "open",
     "lineItems": [{ "label": "Pro Plan", "amount": "4900000" }],
     "createdAt": 1747350000,
@@ -58,7 +58,7 @@ Content-Type: application/json
     "merchantAddress": "0xA0b8...eB48",
     "amount": "4900000",
     "currency": "USDC",
-    "chainKey": "base",
+    "chainKey": "arc-testnet",
     "status": "paid",
     "settledTxHash": "0x4f1c...92a0",
     "settledAt": 1747350522
@@ -77,7 +77,7 @@ Content-Type: application/json
   ]
 }`;
 
-const listPaymentsRequest = `GET /api/payments?merchantId=merchant_acme&chainKey=base`;
+const listPaymentsRequest = `GET /api/payments?merchantId=merchant_acme&chainKey=arc-testnet`;
 
 const listPaymentsResponse = `HTTP/1.1 200 OK
 Content-Type: application/json
@@ -87,7 +87,7 @@ Content-Type: application/json
     {
       "id": "pay_01HE2K7Z11",
       "invoiceId": "inv_01HE2K6BX9C0",
-      "chainKey": "base",
+      "chainKey": "arc-testnet",
       "txHash": "0x4f1c...92a0",
       "amount": "4900000",
       "currency": "USDC",
@@ -111,7 +111,7 @@ X-Circle-Signature: t=1747350500,v1=<hex hmac sha256>
     "destination": {
       "type": "blockchain",
       "address": "0xA0b8...eB48",
-      "chain": "BASE"
+      "chain": "ARC"
     }
   }
 }`;

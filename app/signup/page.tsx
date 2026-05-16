@@ -39,18 +39,12 @@ const chainGroups: {
     label: "Mainnet — post-audit launch (M2)",
     hint: "Unlocks after the smart-contract audit closes. Currently disabled.",
     options: [
-      { value: "base", label: "Base", disabled: true },
-      { value: "arbitrum", label: "Arbitrum One", disabled: true },
-      { value: "optimism", label: "Optimism", disabled: true },
-      { value: "polygon", label: "Polygon", disabled: true },
-      { value: "ethereum", label: "Ethereum", disabled: true },
       { value: "arc", label: "Arc Mainnet (Summer 2026)", disabled: true },
     ],
   },
   {
     label: "Testnet preview — accept on-chain test payments now",
     options: [
-      { value: "base-sepolia", label: "Base Sepolia" },
       { value: "arc-testnet", label: "Arc Testnet" },
     ],
   },

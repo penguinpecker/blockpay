@@ -21,20 +21,19 @@ Step-by-step. Each step copies a value into `.env.local` — that file is gitign
 
 ## 2. Gas Station policy per chain (was "Paymaster" in older docs)
 
-The Gas Station URL is per chain. We're targeting Base Sepolia and Arc testnet for the demo.
+The Gas Station URL is per chain. We're targeting Arc testnet for the demo.
 
 1. Sidebar → **Web3 Services → Gas Station** → **Create Policy**.
-2. For **Base Sepolia**:
-   - Network: Base Sepolia
-   - Sponsorship type: **Pay with USDC** (the customer pays gas in USDC, Circle Paymaster fronts the native ETH)
+2. For **Arc testnet**:
+   - Network: Arc Testnet
+   - Sponsorship type: **Pay with USDC** (the customer pays gas in USDC, Circle Paymaster fronts the native gas)
    - Spending cap: $50 / day (raise later)
    - Whitelist contract addresses (optional): paste `0x50a2a3684F1df4db9A58C21febaf23D6b7DC8B2F` (your deployed BlockPayRouter). This limits sponsorship to BlockPay payments only.
    - Save → copy the **Paymaster URL** into:
      ```
-     NEXT_PUBLIC_CIRCLE_PAYMASTER_URL_BASE_SEPOLIA=
+     NEXT_PUBLIC_CIRCLE_PAYMASTER_URL_ARC_TESTNET=
      ```
-3. Repeat for **Arc testnet** → `NEXT_PUBLIC_CIRCLE_PAYMASTER_URL_ARC_TESTNET=`.
-4. Same Paymaster section → copy your **Policy ID** into:
+3. Same Paymaster section → copy your **Policy ID** into:
    ```
    CIRCLE_PAYMASTER_POLICY_ID=
    ```
@@ -46,9 +45,8 @@ ERC-4337 needs a bundler to submit UserOps. You have two options:
 **Option A — Pimlico (free dev tier, easiest):**
 1. Sign up at https://dashboard.pimlico.io
 2. Create an API key
-3. Bundler URLs:
+3. Bundler URL:
    ```
-   NEXT_PUBLIC_BUNDLER_URL_BASE_SEPOLIA=https://api.pimlico.io/v2/84532/rpc?apikey=YOURKEY
    NEXT_PUBLIC_BUNDLER_URL_ARC_TESTNET=https://api.pimlico.io/v2/5042002/rpc?apikey=YOURKEY
    ```
    (Pimlico may not support Arc yet — check the chain list. If not, ask Circle support for the Arc bundler URL — it's typically bundled with the Paymaster on Arc.)
@@ -74,7 +72,7 @@ cd ~/Projects/blockpay
 npx tsx scripts/check-wallet.ts   # confirms RPC + balance still good
 npm run dev                        # starts the local site
 # open http://localhost:3000/embed/preview
-# pick "Base" pill, connect wallet — gasless path activates automatically
+# pick "Arc" pill, connect wallet — gasless path activates automatically
 # because lib/paymaster.ts:paymasterAvailable() now returns true.
 ```
 

@@ -120,7 +120,7 @@ add_shortcode('blockpay_donate', function ($atts) {
     $invoice = $bp->createInvoice([
         'amount'          => (string) $atts['amount'],
         'currency'        => 'USDC',
-        'chainKey'        => 'base',
+        'chainKey'        => 'arc-testnet',
         'merchantAddress' => get_option('blockpay_settlement_wallet'),
         'description'     => 'Donation to ' . get_bloginfo('name'),
     ]);
@@ -153,7 +153,7 @@ const eventInvoiceCreated = `{
     "invoiceId": "inv_01HE2...",
     "amount": "49.00",
     "currency": "USDC",
-    "chainKey": "base",
+    "chainKey": "arc-testnet",
     "checkoutUrl": "https://blockpay.dev/pay/inv_01HE2...",
     "metadata": { "order_id": "1042" }
   }
@@ -165,7 +165,7 @@ const eventInvoicePaid = `{
     "invoiceId": "inv_01HE2...",
     "amount": "49.00",
     "currency": "USDC",
-    "chainKey": "base",
+    "chainKey": "arc-testnet",
     "txHash": "0x9b1c...e3f0",
     "settledAt": 1715817600,
     "metadata": { "order_id": "1042" }
@@ -178,7 +178,7 @@ const eventPaymentReceived = `{
     "invoiceId": "inv_01HE2...",
     "amount": "49.00",
     "currency": "USDC",
-    "chainKey": "base",
+    "chainKey": "arc-testnet",
     "fromAddress": "0xCustomerWallet",
     "txHash": "0x9b1c...e3f0",
     "confirmations": 1

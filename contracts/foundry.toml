@@ -18,11 +18,9 @@ invariant = { runs = 1_000, depth = 50 }
 
 [rpc_endpoints]
 arc_testnet     = "${ARC_TESTNET_RPC_URL}"
-base_sepolia    = "${BASE_SEPOLIA_RPC_URL}"
 eth_sepolia     = "${ETH_SEPOLIA_RPC_URL}"
 
 [etherscan]
-base_sepolia = { key = "${BASESCAN_API_KEY}", chain = 84532 }
 eth_sepolia  = { key = "${ETHERSCAN_API_KEY}", chain = 11155111 }
 
 [fmt]

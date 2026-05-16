@@ -15,13 +15,8 @@ const rows: Row[] = [
   { service: "Merchant dashboard", status: "Operational" },
   { service: "Checkout widget", status: "Operational" },
   { service: "Backend API", status: "Operational" },
-  {
-    service: "Indexer (Base Sepolia)",
-    status: "Degraded",
-    note: "Public RPC throttling — fix planned",
-  },
   { service: "Indexer (Arc Testnet)", status: "Operational" },
-  { service: "Smart contracts (Base Sepolia, Arc Testnet)", status: "Live" },
+  { service: "Smart contracts (Arc Testnet)", status: "Live" },
 ];
 
 const statusColor: Record<Status, string> = {
@@ -106,7 +101,7 @@ export default function StatusPage() {
               <span className="font-mono text-accent">
                 0x50a2a3684F1df4db9A58C21febaf23D6b7DC8B2F
               </span>{" "}
-              on both Base Sepolia and Arc Testnet.
+              on Arc Testnet.
             </p>
           </div>
         </section>

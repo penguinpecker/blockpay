@@ -14,9 +14,9 @@ Tabs to have pre-loaded (in this exact order, so we just Cmd+Tab through them):
 2. VS Code with `lib/web3.ts` open in a second tab
 3. VS Code with `lib/checkout-paymaster.ts` open in a third tab
 4. Terminal at `~/Projects/blockpay/contracts` ready to run `forge test`
-5. Browser: https://sepolia.basescan.org/address/0x50a2a3684F1df4db9A58C21febaf23D6b7DC8B2F
+5. Browser: https://explorer.testnet.arc.network/address/0x50a2a3684F1df4db9A58C21febaf23D6b7DC8B2F
 6. Browser: https://blockpay-six.vercel.app/embed/preview
-7. Browser: https://sepolia.basescan.org/tx/0x90262b821c75ad696472d61ac31d8a1c4bf21ceaba0d1c99880d6660affdb1ca (deploy tx)
+7. Browser: https://explorer.testnet.arc.network/tx/0x7d406ca7ea28740e3f32564dd4d34102fd01becc726a863c4d1e35ef7de2794f (deploy tx)
 
 ---
 
@@ -55,7 +55,7 @@ Tabs to have pre-loaded (in this exact order, so we just Cmd+Tab through them):
 
 **Visual:** VS Code. Three tabs in quick succession.
 
-(a) `lib/contracts.ts` — scroll to the `base-sepolia` entry. Highlight `router`, `usdc`, `circlePaymasterV08`, `entryPointV08`.
+(a) `lib/contracts.ts` — scroll to the `arc-testnet` entry. Highlight `router`, `testUsdc`, `circlePaymasterV08`, `entryPointV08`.
 
 **Script:**
 > "Every chain we support has the Router address, native USDC address, Circle Paymaster v0.8 address, and the ERC-4337 EntryPoint baked in. No off-chain config — Circle Paymaster is a deployed contract."
@@ -74,10 +74,10 @@ Tabs to have pre-loaded (in this exact order, so we just Cmd+Tab through them):
 
 ## Frame 5 — On-chain proof (2:30 → 3:00)
 
-**Visual:** Browser. https://sepolia.basescan.org/address/0x50a2a3684F1df4db9A58C21febaf23D6b7DC8B2F. Show the deployed Router. Click the "Transactions" tab. Scroll the e2e payment tx where merchant got exactly 99.5 tUSDC.
+**Visual:** Browser. https://explorer.testnet.arc.network/address/0x50a2a3684F1df4db9A58C21febaf23D6b7DC8B2F. Show the deployed Router. Click the "Transactions" tab. Scroll the e2e payment tx where merchant got exactly 99.5 tUSDC.
 
 **Script:**
-> "And here's the Router live on Base Sepolia. Same contract address on Arc Testnet — same deployer nonce on both chains. Below is the end-to-end live payment we ran: 100 test USDC paid by the operator, 0.5 USDC fee to the protocol address, 99.5 USDC to the demo merchant. Zero dust left in the contract. That's a real on-chain settlement, not a mock."
+> "And here's the Router live on Arc Testnet. Below is the end-to-end live payment we ran: 100 test USDC paid by the operator, 0.5 USDC fee to the protocol address, 99.5 USDC to the demo merchant. Zero dust left in the contract. That's a real on-chain settlement, not a mock."
 
 **Visual cue:** Open the explorer for the tx hash, point at the `Settled` event in the logs.
 
@@ -88,7 +88,7 @@ Tabs to have pre-loaded (in this exact order, so we just Cmd+Tab through them):
 **Visual:** Browser at https://blockpay-six.vercel.app/embed/preview. Show the embedded checkout card.
 
 **Script:**
-> "Now the customer side. This is the checkout widget that gets embedded in a merchant's Shopify or WordPress store. I'll click Connect Wallet — MetaMask pops up — accept. The card now shows my address. I'll keep Base Sepolia selected — Circle Paymaster live there — and hit Pay."
+> "Now the customer side. This is the checkout widget that gets embedded in a merchant's Shopify or WordPress store. I'll click Connect Wallet — MetaMask pops up — accept. The card now shows my address. I'll keep Arc Testnet selected — Circle Paymaster live there — and hit Pay."
 
 **Action:** Click Connect Wallet. Approve in MetaMask. Click Pay.
 
@@ -107,7 +107,7 @@ Tabs to have pre-loaded (in this exact order, so we just Cmd+Tab through them):
 **Visual:** Back to the homepage hero. Slow fade.
 
 **Script:**
-> "That's BlockPay — a working non-custodial stablecoin gateway, live on Base Sepolia and Arc Testnet, with a Circle Paymaster gasless flow, signed receipts, and a Stripe-grade developer experience. The grant funds the security audit, the Shopify and WooCommerce plugins, and Arc mainnet launch on day one. Thanks."
+> "That's BlockPay — a working non-custodial stablecoin gateway, live on Arc Testnet, with a Circle Paymaster gasless flow, signed receipts, and a Stripe-grade developer experience. The grant funds the security audit, the Shopify and WooCommerce plugins, and Arc mainnet launch on day one. Thanks."
 
 ---
 
@@ -117,7 +117,7 @@ Tabs to have pre-loaded (in this exact order, so we just Cmd+Tab through them):
 - [ ] Tabs pre-loaded in order (list at top of this doc)
 - [ ] `forge test` passes when run fresh (re-run before recording)
 - [ ] MetaMask unlocked with the deployer EOA `0x9D6D…1e14`
-- [ ] Wallet has Base Sepolia network added
+- [ ] Wallet has Arc Testnet network added
 - [ ] Web app is live at https://blockpay-six.vercel.app (verify before record)
 - [ ] Practice run once, no recording, ~4:30 timing
 - [ ] Real take. If you flub a line, just keep going — don't restart unless the visual is unusable
@@ -127,6 +127,6 @@ Tabs to have pre-loaded (in this exact order, so we just Cmd+Tab through them):
 
 - [ ] Upload to YouTube **Unlisted** (not Private, not Public) — Circle reviewers need to view without a YouTube account
 - [ ] Title: "BlockPay — Circle Grants Cohort 2 Technical Demo"
-- [ ] Description: "Non-custodial stablecoin payment gateway. Live demo of contracts, frontend, and Circle Paymaster gasless USDC checkout on Base Sepolia. Submitted to Circle Developer Grant Program, May 2026."
+- [ ] Description: "Non-custodial stablecoin payment gateway. Live demo of contracts, frontend, and Circle Paymaster gasless USDC checkout on Arc Testnet. Submitted to Circle Developer Grant Program, May 2026."
 - [ ] Paste the YouTube link into the grant form's video field
 - [ ] Run-time check: must be ≤ 5:00 even after compression

@@ -5,9 +5,7 @@
  */
 
 export type ChainKey =
-  | "base-sepolia"
   | "arc-testnet"
-  | "base"
   | "arc"
   | "ethereum"
   | "optimism"
@@ -40,19 +38,6 @@ export type ChainConfig = {
 export const ENTRY_POINT_V08: `0x${string}` = "0x4337084D9E255Ff0702461CF8895CE9E3b5Ff108";
 
 export const CHAINS: Record<ChainKey, ChainConfig> = {
-  "base-sepolia": {
-    key: "base-sepolia",
-    chainId: 84532,
-    name: "Base Sepolia",
-    shortName: "Base testnet",
-    isTestnet: true,
-    explorerBase: "https://sepolia.basescan.org",
-    router: "0x50a2a3684F1df4db9A58C21febaf23D6b7DC8B2F",
-    usdc: "0x036CbD53842c5426634e7929541eC2318f3dCF7e",
-    testUsdc: "0x933f5D203eE94B29DE7bAe183D5Ff6032Bf8862B",
-    circlePaymasterV08: "0x3BA9A96eE3eFf3A69E2B18886AcF52027EFF8966",
-    entryPointV08: ENTRY_POINT_V08,
-  },
   "arc-testnet": {
     key: "arc-testnet",
     chainId: 5042002,
@@ -64,18 +49,6 @@ export const CHAINS: Record<ChainKey, ChainConfig> = {
     usdc: null,
     testUsdc: null,
     circlePaymasterV08: "0x3BA9A96eE3eFf3A69E2B18886AcF52027EFF8966",
-    entryPointV08: ENTRY_POINT_V08,
-  },
-  base: {
-    key: "base",
-    chainId: 8453,
-    name: "Base",
-    shortName: "Base",
-    isTestnet: false,
-    explorerBase: "https://basescan.org",
-    router: null,
-    usdc: "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
-    circlePaymasterV08: "0x0578cFB241215b77442a541325d6A4E6dFE700Ec",
     entryPointV08: ENTRY_POINT_V08,
   },
   arc: {
@@ -132,8 +105,8 @@ export const CHAINS: Record<ChainKey, ChainConfig> = {
   },
 };
 
-export const DEMO_CHAINS: ChainKey[] = ["base-sepolia", "arc-testnet"];
-export const LIVE_DEMO_DEFAULT: ChainKey = "base-sepolia";
+export const DEMO_CHAINS: ChainKey[] = ["arc-testnet"];
+export const LIVE_DEMO_DEFAULT: ChainKey = "arc-testnet";
 
 export function getChain(key: ChainKey): ChainConfig {
   return CHAINS[key];

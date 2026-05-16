@@ -16,7 +16,7 @@ Replay-protected per invoice. Two-step ownable, pausable, reentrancy-guarded.
 
 | Property | How verified |
 |---|---|
-| No dust ever remains in the router | Foundry fuzz `testFuzz_pay_no_dust` (256 runs) + live e2e on both Base Sepolia and Arc testnet |
+| No dust ever remains in the router | Foundry fuzz `testFuzz_pay_no_dust` (256 runs) + live e2e on Arc testnet |
 | Replay rejected after first settle | `test_replayReverts` + on-chain `settled` mapping read-back |
 | `feeBps` never exceeds `MAX_FEE_BPS = 200` | `setFeeBps` revert path + constructor guard |
 | `feeRecipient` cannot be zero | constructor + setter guards |
@@ -53,9 +53,9 @@ When we go to external audit:
 ## Mainnet readiness checklist
 
 - [x] Tests passing (14/14, fuzz 256 runs)
-- [x] Deployed and tested on 2+ testnets (Base Sepolia, Arc testnet)
-- [x] Live `pay()` exercised end-to-end on both
+- [x] Deployed and tested on Arc testnet (previously also deployed on Base Sepolia — historical record at `contracts/deployments/base-sepolia.json`)
+- [x] Live `pay()` exercised end-to-end on Arc testnet
 - [ ] External audit
-- [ ] Basescan / Etherscan source verification (needs API keys)
+- [ ] Arc explorer / Etherscan source verification (needs API keys)
 - [ ] Multisig deployer ready (Safe) — operator-first deploy, multisig handoff at the very end
 - [ ] Bug bounty program (Immunefi or similar) at mainnet launch

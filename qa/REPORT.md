@@ -77,13 +77,10 @@ All input validation errors land at 400; all auth gates land at 401; all bad rou
 ## Phase 3 — On-chain contract reads (6/6)
 
 ```
-Base Sepolia (chainId 84532) — Router 0x50a2…8B2F
+Arc Testnet (chainId 5042002) — Router 0x50a2…8B2F
   owner       = 0x9D6D4CbD170Ea0CeabcAD69f16917669Dfa11e14   ✓ deployer
   feeBps      = 50                                            ✓ 0.50%
   MAX_FEE_BPS = 200                                           ✓ 2.00% hard cap
-  paused      = false                                         ✓
-Arc Testnet (chainId 5042002) — Router 0x50a2…8B2F (same nonce, same address)
-  owner       = 0x9D6D4CbD170Ea0CeabcAD69f16917669Dfa11e14   ✓
   paused      = false                                         ✓
 ```
 
@@ -95,10 +92,10 @@ Arc Testnet (chainId 5042002) — Router 0x50a2…8B2F (same nonce, same address
 |---|---|---|
 | Signup form fields exist + are required | `opera-browser-cli snapshot` | All 7 fields present (`businessName`, `email`, `wallet`, `chain`, `currency`, `volume`, `agree`), submit button rendered |
 | "Sign Up Free" nav CTA → `/signup` | snapshot href check | ✓ `url="https://blockpay-six.vercel.app/signup"` |
-| Embed preview renders deployed router address | snapshot text + link | ✓ `Router: 0x50a2…8B2F` linking to Basescan |
+| Embed preview renders deployed router address | snapshot text + link | ✓ `Router: 0x50a2…8B2F` linking to Arc explorer |
 | `GET /dashboard` redirect chain | `curl -I` | ✓ HTTP 307 + `Location: /login?from=%2Fdashboard` + Auth.js CSRF cookie set |
 | `/login?from=/dashboard` renders | snapshot + console | ✓ 0 console errors, 0 failed requests |
-| Checkout chain status indicator | snapshot pre-click | ✓ defaults to "Base" pressed, "Live testnet" status |
+| Checkout chain status indicator | snapshot pre-click | ✓ defaults to "Arc" pressed, "Live testnet" status |
 
 ---
 
@@ -108,8 +105,8 @@ Verified that clicking different chain pills changes both `aria-pressed` AND the
 
 | Action | Before | After |
 |---|---|---|
-| Default state | Base pressed, "Live testnet", Router 0x50a2…8B2F on Base Sepolia | — |
-| `.click()` on Solana button | Base pressed | **Solana pressed, "Non-EVM"** indicator |
+| Default state | Arc pressed, "Live testnet", Router 0x50a2…8B2F on Arc Testnet | — |
+| `.click()` on Solana button | Arc pressed | **Solana pressed, "Non-EVM"** indicator |
 | `.click()` on Ethereum button (next) | Solana pressed | Ethereum pressed, "Coming soon" indicator |
 
 Logic verified — the checkout widget correctly routes Solana to a non-EVM warning and Ethereum to a "coming soon" state since no router is deployed there yet.
@@ -152,7 +149,7 @@ opera-browser-cli network | grep -E "\[(4|5)[0-9]{2}\]"
 
 # Contract reads
 set -a; . .env.local; set +a
-cast call 0x50a2a3684F1df4db9A58C21febaf23D6b7DC8B2F 'owner()(address)' --rpc-url $BASE_SEPOLIA_RPC_URL
+cast call 0x50a2a3684F1df4db9A58C21febaf23D6b7DC8B2F 'owner()(address)' --rpc-url $ARC_TESTNET_RPC_URL
 ```
 
 ---

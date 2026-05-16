@@ -23,7 +23,7 @@ const bp = new BlockPay({
 const invoicesCreateCode = `const invoice = await bp.invoices.create({
   amount: "49.00",
   currency: "USDC",
-  chainKey: "base",
+  chainKey: "arc-testnet",
   merchantAddress: "0xYourSettlementWallet",
   lineItems: [{ label: "Pro Plan", amount: "49.00" }],
   // Optional. Unix seconds.
@@ -47,7 +47,7 @@ const paymentLinksCode = `// One-off link: tied to a single invoice.
 const link = await bp.paymentLinks.create({
   amount: "12.00",
   currency: "USDC",
-  chainKey: "base",
+  chainKey: "arc-testnet",
   merchantAddress: "0xYourSettlementWallet",
   description: "Coffee, large",
 });
@@ -56,7 +56,7 @@ const link = await bp.paymentLinks.create({
 const reusable = await bp.paymentLinks.create({
   amount: "12.00",
   currency: "USDC",
-  chainKey: "base",
+  chainKey: "arc-testnet",
   merchantAddress: "0xYourSettlementWallet",
   reusable: true,
 });`;

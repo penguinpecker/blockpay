@@ -60,8 +60,6 @@ export function paymasterAvailable(chainKey: ChainKey): boolean {
 
 function bundlerUrlFor(chainKey: ChainKey): string | undefined {
   switch (chainKey) {
-    case "base-sepolia":
-      return process.env.NEXT_PUBLIC_BUNDLER_URL_BASE_SEPOLIA;
     case "arc-testnet":
       return process.env.NEXT_PUBLIC_BUNDLER_URL_ARC_TESTNET;
     default:
@@ -71,12 +69,8 @@ function bundlerUrlFor(chainKey: ChainKey): string | undefined {
 
 function rpcUrlsFor(key: ChainKey): string[] {
   switch (key) {
-    case "base-sepolia":
-      return ["https://sepolia.base.org"];
     case "arc-testnet":
       return ["https://rpc.testnet.arc.network"];
-    case "base":
-      return ["https://mainnet.base.org"];
     case "arc":
       return ["https://rpc.arc.network"];
     default:

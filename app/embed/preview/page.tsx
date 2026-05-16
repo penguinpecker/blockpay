@@ -13,7 +13,7 @@ const FEATURES = [
   {
     icon: Layers,
     title: "Any token, any chain",
-    body: "Shoppers pay with USDC, USDT, ETH or SOL across Arc, Base, Ethereum or Solana. You always settle in your chosen asset.",
+    body: "Shoppers pay with USDC, USDT, ETH or SOL across Arc, Ethereum or Solana. You always settle in your chosen asset.",
   },
   {
     icon: Code,

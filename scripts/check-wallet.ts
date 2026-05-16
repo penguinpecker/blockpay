@@ -18,7 +18,6 @@ console.log();
 type Chain = { name: string; rpc: string | undefined };
 const chains: Chain[] = [
   { name: "Arc testnet     ", rpc: process.env.ARC_TESTNET_RPC_URL },
-  { name: "Base Sepolia    ", rpc: process.env.BASE_SEPOLIA_RPC_URL },
   { name: "Ethereum Sepolia", rpc: process.env.ETH_SEPOLIA_RPC_URL },
 ];
 

@@ -27,7 +27,7 @@ const CURL_SNIPPET = `curl -X POST https://blockpay-six.vercel.app/api/invoices 
     "merchantAddress": "0xYourSettlementWallet",
     "amount": "1000000",
     "currency": "USDC",
-    "chainKey": "base-sepolia",
+    "chainKey": "arc-testnet",
     "lineItems": [
       { "label": "Pro plan", "amount": "1.00 USDC" }
     ]
@@ -41,7 +41,7 @@ const bp = new Blockpay({ apiKey: process.env.BLOCKPAY_KEY });
 const invoice = await bp.invoices.create({
   amount: "1000000", // base units (USDC = 6 decimals)
   currency: "USDC",
-  chainKey: "base-sepolia",
+  chainKey: "arc-testnet",
   lineItems: [{ label: "Pro plan", amount: "1.00 USDC" }],
 });
 

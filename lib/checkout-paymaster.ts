@@ -26,7 +26,7 @@ import {
   parseAbi,
 } from "viem";
 import { createBundlerClient } from "viem/account-abstraction";
-import { arcTestnet, baseSepolia } from "viem/chains";
+import { arcTestnet } from "viem/chains";
 import { toEcdsaKernelSmartAccount } from "permissionless/accounts";
 
 import {
@@ -45,7 +45,7 @@ export type GaslessStatus =
   | { kind: "waiting-receipt"; userOpHash: `0x${string}` };
 
 export type PayGaslessParams = {
-  chainKey: "base-sepolia" | "arc-testnet";
+  chainKey: "arc-testnet";
   payerEoa: `0x${string}`;
   amountUsdc: bigint;
   merchantAddress: `0x${string}`;
@@ -69,14 +69,12 @@ const USDC_PERMIT_ABI = parseAbi([
   "function nonces(address owner) view returns (uint256)",
 ]);
 
-function rpcUrlFor(key: "base-sepolia" | "arc-testnet"): string {
-  return key === "base-sepolia"
-    ? "https://sepolia.base.org"
-    : "https://rpc.testnet.arc.network";
+function rpcUrlFor(_key: "arc-testnet"): string {
+  return "https://rpc.testnet.arc.network";
 }
 
-function viemChainFor(key: "base-sepolia" | "arc-testnet") {
-  return key === "base-sepolia" ? baseSepolia : arcTestnet;
+function viemChainFor(_key: "arc-testnet") {
+  return arcTestnet;
 }
 
 /** Redact ?apikey=... so we never log bundler API keys. */

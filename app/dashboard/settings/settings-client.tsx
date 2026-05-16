@@ -165,14 +165,10 @@ function ProfileForm({
             onChange={(e) => setSettlementChainKey(e.target.value)}
             className="dashboard-settings-input"
           >
-            <option value="base-sepolia">Base Sepolia</option>
             <option value="arc-testnet">Arc Testnet</option>
-            <option value="base">Base</option>
-            <option value="arc">Arc</option>
-            <option value="ethereum">Ethereum</option>
-            <option value="optimism">Optimism</option>
-            <option value="arbitrum">Arbitrum</option>
-            <option value="polygon">Polygon</option>
+            <option value="arc" disabled>
+              Arc Mainnet (post-audit)
+            </option>
           </select>
         </Field>
         <Field label="Settlement currency">

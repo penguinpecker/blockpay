@@ -252,14 +252,7 @@ export function InvoicesClient({
                 onChange={(e) => setChainKey(e.target.value)}
                 className="dashboard-input"
               >
-                <option value="base-sepolia">Base Sepolia</option>
                 <option value="arc-testnet">Arc Testnet</option>
-                <option value="base">Base</option>
-                <option value="arc">Arc</option>
-                <option value="ethereum">Ethereum</option>
-                <option value="optimism">Optimism</option>
-                <option value="arbitrum">Arbitrum</option>
-                <option value="polygon">Polygon</option>
               </select>
             </Field>
             <Field label="Memo (optional)">

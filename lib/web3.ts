@@ -1,7 +1,7 @@
 /**
  * Browser web3 wiring for BlockPay. Viem-based, no wagmi/RainbowKit so we
  * keep bundle size tight. Talks to the deployed BlockPayRouter on the
- * supported demo chains (Base Sepolia + Arc testnet).
+ * supported demo chain (Arc testnet).
  */
 
 import {
@@ -40,7 +40,7 @@ export const ERC20_ABI = parseAbi([
 
 // ---- Pill chain id → ChainConfig mapping ----
 
-export type PillChainId = "arc" | "base" | "ethereum" | "solana";
+export type PillChainId = "arc" | "ethereum" | "solana";
 
 export function configForPill(pill: PillChainId): {
   chain: ChainConfig | null;
@@ -49,8 +49,6 @@ export function configForPill(pill: PillChainId): {
   switch (pill) {
     case "arc":
       return { chain: CHAINS["arc-testnet"], status: "live-testnet" };
-    case "base":
-      return { chain: CHAINS["base-sepolia"], status: "live-testnet" };
     case "ethereum":
       return { chain: null, status: "coming-soon" };
     case "solana":
@@ -136,12 +134,8 @@ export async function ensureChain(target: ChainConfig): Promise<void> {
 
 function rpcUrlsFor(key: ChainKey): string[] {
   switch (key) {
-    case "base-sepolia":
-      return ["https://sepolia.base.org"];
     case "arc-testnet":
       return ["https://rpc.testnet.arc.network"];
-    case "base":
-      return ["https://mainnet.base.org"];
     case "arc":
       return ["https://rpc.arc.network"];
     case "ethereum":

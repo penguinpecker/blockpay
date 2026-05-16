@@ -53,7 +53,7 @@ const faqs = [
   },
   {
     q: "How long does settlement take?",
-    a: "Confirmation time is governed by the underlying chain — typically a couple of seconds on Base and Arc. We expose a webhook the instant the chain reports finality.",
+    a: "Confirmation time is governed by the underlying chain — typically a couple of seconds on Arc. We expose a webhook the instant the chain reports finality.",
   },
   {
     q: "Do you support non-USDC tokens?",

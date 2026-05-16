@@ -3,7 +3,7 @@
 Non-custodial stablecoin payment gateway built on Circle's stack. Accepts USDC across chains, gasless checkout via Circle Paymaster, EIP-712 signed receipts referenced on-chain.
 
 **Live:** [blockpay-six.vercel.app](https://blockpay-six.vercel.app)
-**Live testnet demo:** [blockpay-six.vercel.app/embed/preview](https://blockpay-six.vercel.app/embed/preview) — connect a wallet on Base Sepolia, mint test USDC, pay through the deployed router with no native gas.
+**Live testnet demo:** [blockpay-six.vercel.app/embed/preview](https://blockpay-six.vercel.app/embed/preview) — connect a wallet on Arc Testnet, mint test USDC, pay through the deployed router with no native gas.
 
 ---
 
@@ -29,7 +29,7 @@ lib/
   checkout-paymaster.ts         Gasless ERC-4337 + EIP-2612 permit flow
   storage.ts                    Storage interface + in-memory singleton
   server-circle.ts              Server-only Circle REST helper
-  server-indexer.ts             Polls Settled events on Base Sepolia + Arc Testnet
+  server-indexer.ts             Polls Settled events on Arc Testnet
 contracts/                    Foundry workspace
   src/BlockPayRouter.sol        Settlement router — replay-protected, splits, fee cap, pausable
   test/BlockPayRouter.t.sol     14 tests + 256-run fuzz
@@ -49,10 +49,9 @@ IA.md                         Site map across all surfaces
 
 | Chain | Network | BlockPayRouter |
 |---|---|---|
-| Base Sepolia | 84532 | [`0x50a2a3684F1df4db9A58C21febaf23D6b7DC8B2F`](https://sepolia.basescan.org/address/0x50a2a3684F1df4db9A58C21febaf23D6b7DC8B2F) |
 | Arc Testnet | 5042002 | [`0x50a2a3684F1df4db9A58C21febaf23D6b7DC8B2F`](https://explorer.testnet.arc.network/address/0x50a2a3684F1df4db9A58C21febaf23D6b7DC8B2F) |
 
-End-to-end live payment proof: merchant received 99.5 tUSDC, fee 0.5 tUSDC, router residue zero. See `contracts/deployments/*.json` for manifests and tx hashes.
+End-to-end live payment proof: merchant received 99.5 tUSDC, fee 0.5 tUSDC, router residue zero. See `contracts/deployments/arc-testnet.json` for the manifest and tx hashes.
 
 ---
 
@@ -100,7 +99,7 @@ To redeploy the router yourself:
 ```bash
 set -a; . ../.env.local; set +a
 forge script script/DeployRouter.s.sol:DeployRouter \
-  --rpc-url "$BASE_SEPOLIA_RPC_URL" --broadcast --slow
+  --rpc-url "$ARC_TESTNET_RPC_URL" --broadcast --slow
 ```
 
 ---
@@ -135,7 +134,7 @@ forge script script/DeployRouter.s.sol:DeployRouter \
 
 ## Status
 
-- Live on Base Sepolia + Arc Testnet (testnet only)
+- Live on Arc Testnet (testnet only)
 - 23 prerendered Next.js routes, 5 API endpoints
 - 14/14 Solidity tests + 256-run fuzz invariant
 - Submitting to Circle Developer Grant Program — Cohort 2, May 2026

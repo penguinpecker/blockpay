@@ -2,11 +2,10 @@
 
 import { cn } from "@/lib/utils";
 
-export type ChainId = "arc" | "base" | "ethereum" | "solana";
+export type ChainId = "arc" | "ethereum" | "solana";
 
 export const CHAINS: { id: ChainId; label: string; dot: string }[] = [
   { id: "arc", label: "Arc", dot: "#4ade80" },
-  { id: "base", label: "Base", dot: "#3b82f6" },
   { id: "ethereum", label: "Ethereum", dot: "#a1a1aa" },
   { id: "solana", label: "Solana", dot: "#a855f7" },
 ];

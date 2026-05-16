@@ -53,14 +53,12 @@ const DEMO_MERCHANT: Address = "0x93c984f976569bccEaDBB6e973E0f7d62A8aD217";
 
 const CHAIN_DOTS: Record<ChainId, string> = {
   arc: "#4ade80",
-  base: "#3b82f6",
   ethereum: "#a1a1aa",
   solana: "#a855f7",
 };
 
 const CHAIN_LABELS: Record<ChainId, string> = {
   arc: "Arc Testnet",
-  base: "Base Sepolia",
   ethereum: "Ethereum",
   solana: "Solana",
 };
@@ -81,8 +79,8 @@ type Status =
     }
   | { kind: "error"; message: string };
 
-function isGaslessChainKey(k: string | undefined): k is "base-sepolia" | "arc-testnet" {
-  return k === "base-sepolia" || k === "arc-testnet";
+function isGaslessChainKey(k: string | undefined): k is "arc-testnet" {
+  return k === "arc-testnet";
 }
 
 function gaslessStatusLabel(s: GaslessStatus): string {
@@ -100,9 +98,8 @@ function gaslessStatusLabel(s: GaslessStatus): string {
   }
 }
 
-function userOpExplorerFor(chainKey: "base-sepolia" | "arc-testnet", hash: Hex): string {
-  const network = chainKey === "base-sepolia" ? "base-sepolia" : "base-sepolia";
-  return `https://www.jiffyscan.xyz/userOpHash/${hash}?network=${network}`;
+function userOpExplorerFor(_chainKey: "arc-testnet", hash: Hex): string {
+  return `https://www.jiffyscan.xyz/userOpHash/${hash}`;
 }
 
 /** Derive the 4-step rail from the wallet/tx status. */
@@ -162,7 +159,7 @@ export function CheckoutCard({
   payHref,
 }: CheckoutCardProps) {
   const [token, setToken] = useState<TokenId>("USDC");
-  const [chain, setChain] = useState<ChainId>("base");
+  const [chain, setChain] = useState<ChainId>("arc");
   const [account, setAccount] = useState<Address | null>(null);
   const [status, setStatus] = useState<Status>({ kind: "idle" });
   const [showOther, setShowOther] = useState(false);
@@ -192,7 +189,7 @@ export function CheckoutCard({
     }
   }, [status]);
 
-  const target = configForPill(chain as "arc" | "base" | "ethereum" | "solana");
+  const target = configForPill(chain as "arc" | "ethereum" | "solana");
   const isLive = target.status === "live-testnet" && target.chain !== null;
   const useGasless =
     isGaslessChainKey(target.chain?.key) && paymasterAvailable(target.chain.key);

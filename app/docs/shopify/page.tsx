@@ -72,7 +72,7 @@ const eventInvoiceCreated = `{
     "invoiceId": "inv_01HE2...",
     "amount": "49.00",
     "currency": "USDC",
-    "chainKey": "base",
+    "chainKey": "arc-testnet",
     "checkoutUrl": "https://blockpay.dev/pay/inv_01HE2...",
     "shopifyOrderId": "gid://shopify/Order/1234567890"
   }
@@ -84,7 +84,7 @@ const eventInvoicePaid = `{
     "invoiceId": "inv_01HE2...",
     "amount": "49.00",
     "currency": "USDC",
-    "chainKey": "base",
+    "chainKey": "arc-testnet",
     "txHash": "0x9b1c...e3f0",
     "settledAt": 1715817600
   }
@@ -96,7 +96,7 @@ const eventPaymentReceived = `{
     "invoiceId": "inv_01HE2...",
     "amount": "49.00",
     "currency": "USDC",
-    "chainKey": "base",
+    "chainKey": "arc-testnet",
     "fromAddress": "0xCustomerWallet",
     "txHash": "0x9b1c...e3f0",
     "confirmations": 1

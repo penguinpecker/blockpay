@@ -27,7 +27,7 @@ X-BlockPay-Signature: t=1747350522,v1=8d2c4f...
       "merchantId": "merchant_acme",
       "amount": "4900000",
       "currency": "USDC",
-      "chainKey": "base",
+      "chainKey": "arc-testnet",
       "status": "paid",
       "settledTxHash": "0x4f1c...92a0",
       "settledAt": 1747350522
