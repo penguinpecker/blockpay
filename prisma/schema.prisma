@@ -75,6 +75,7 @@ model Merchant {
   id                  String   @id @default(cuid())
   userId              String   @unique
   businessName        String
+  industry            String?
   settlementAddress   String
   settlementChainKey  String
   settlementCurrency  String

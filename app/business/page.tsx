@@ -78,6 +78,10 @@ export default function BusinessPage() {
                 See the live demo
                 <ChevronRight size={16} strokeWidth={2.4} />
               </Link>
+              <Link href="/showcase/store" className="btn-pill text-sm">
+                See a live demo store
+                <ChevronRight size={16} strokeWidth={2.4} />
+              </Link>
             </div>
           </div>
         </section>

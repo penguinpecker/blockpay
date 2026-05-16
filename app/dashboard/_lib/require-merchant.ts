@@ -26,7 +26,7 @@ export async function requireMerchant(fromPath: string = "/dashboard"): Promise<
     where: { userId },
   });
   if (!merchant) {
-    redirect("/signup?reason=complete-profile");
+    redirect("/onboarding");
   }
 
   return { userId, merchant };

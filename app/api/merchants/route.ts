@@ -20,6 +20,7 @@ export async function POST(req: NextRequest) {
   let body: {
     businessName?: string;
     email?: string;
+    industry?: string;
     settlementAddress?: string;
     settlementChainKey?: string;
     settlementCurrency?: string;
@@ -32,6 +33,7 @@ export async function POST(req: NextRequest) {
   }
 
   const businessName = body.businessName?.trim();
+  const industry = body.industry?.trim() || null;
   const settlementAddress = body.settlementAddress?.trim();
   const settlementChainKey = body.settlementChainKey?.trim();
   const settlementCurrency = body.settlementCurrency?.trim();
@@ -63,6 +65,7 @@ export async function POST(req: NextRequest) {
     create: {
       userId,
       businessName,
+      industry,
       settlementAddress,
       settlementChainKey,
       settlementCurrency,
@@ -71,6 +74,7 @@ export async function POST(req: NextRequest) {
     },
     update: {
       businessName,
+      industry,
       settlementAddress,
       settlementChainKey,
       settlementCurrency,
@@ -82,6 +86,7 @@ export async function POST(req: NextRequest) {
     merchant: {
       id: merchant.id,
       businessName: merchant.businessName,
+      industry: merchant.industry,
       settlementAddress: merchant.settlementAddress,
       settlementChainKey: merchant.settlementChainKey,
       settlementCurrency: merchant.settlementCurrency,
@@ -123,6 +128,7 @@ export async function PATCH(req: NextRequest) {
 
   let body: {
     businessName?: string;
+    industry?: string | null;
     settlementAddress?: string;
     settlementChainKey?: string;
     settlementCurrency?: string;
@@ -144,6 +150,7 @@ export async function PATCH(req: NextRequest) {
 
   const data: {
     businessName?: string;
+    industry?: string | null;
     settlementAddress?: string;
     settlementChainKey?: string;
     settlementCurrency?: string;
@@ -154,6 +161,12 @@ export async function PATCH(req: NextRequest) {
 
   if (typeof body.businessName === "string" && body.businessName.trim()) {
     data.businessName = body.businessName.trim();
+  }
+  if (body.industry === null) {
+    data.industry = null;
+  } else if (typeof body.industry === "string") {
+    const trimmed = body.industry.trim();
+    data.industry = trimmed === "" ? null : trimmed;
   }
   if (typeof body.settlementAddress === "string") {
     const addr = body.settlementAddress.trim();
@@ -220,6 +233,7 @@ export async function PATCH(req: NextRequest) {
     merchant: {
       id: updated.id,
       businessName: updated.businessName,
+      industry: updated.industry,
       settlementAddress: updated.settlementAddress,
       settlementChainKey: updated.settlementChainKey,
       settlementCurrency: updated.settlementCurrency,
