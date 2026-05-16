@@ -1,15 +1,15 @@
 # BlockPay Information Architecture
 
 ## Marketing site (public)
-- `/` Home — already built
-- `/features` — Feature deep-dives (gasless, cross-chain, accept-any-token, receipts, subscriptions, splits)
-- `/solutions` — Vertical pitches (Shopify, WooCommerce, Marketplaces, SaaS subscriptions, In-person POS)
-- `/pricing` — Tiered pricing (Free, Growth, Scale) + fee table
-- `/contact` — Form + sales info
+- `/` Fork splash — short hero plus two equal tiles routing to `/business` and `/users`
+- `/business` — Merchant landing (merges the former `/`, `/features`, `/solutions`): hero, business-to-wallet flow, key features, plugin + SDK integrations, comparison table, FAQ, final CTA
+- `/users` — Consumer landing: hero, what-you-can-do grid, phone-frame preview of the wallet, user FAQ, final CTA into `/app`
 - `/docs` — Developer docs (Quick start, API reference, SDK, Webhooks, Plugins)
 - `/blog` — Articles index (stub)
 - `/about`, `/careers`, `/terms`, `/privacy` — Legal & company (stubs)
 - `/signup`, `/login` — Auth (stubs)
+
+> Removed: `/features` and `/solutions` — both were merged into `/business` on 2026-05-16.
 
 ## Merchant dashboard `/dashboard`
 Authenticated merchant area, sidebar nav, dark themed to match brand.

@@ -3,13 +3,12 @@ import { ChevronRight } from "lucide-react";
 import { Logo } from "./logo";
 
 const links = [
-  { label: "Home", href: "/" },
-  { label: "Features", href: "/features" },
-  { label: "Solutions", href: "/solutions" },
+  { label: "For Business", href: "/business" },
+  { label: "For Users", href: "/users" },
   { label: "Docs", href: "/docs" },
 ];
 
-export function Nav({ active = "Home" }: { active?: string }) {
+export function Nav({ active = "" }: { active?: string }) {
   return (
     <header className="absolute top-0 left-0 right-0 z-50">
       <div className="mx-auto flex max-w-7xl items-center justify-between px-8 py-7">
