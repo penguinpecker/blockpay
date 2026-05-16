@@ -14,12 +14,12 @@ export function FlowSection() {
       <div className="mx-auto max-w-7xl">
         <div className="card-frame grid items-center gap-12 px-10 py-14 lg:grid-cols-2 lg:px-16 lg:py-20">
           <div>
-            <h2 className="font-display text-4xl font-bold leading-tight tracking-tight md:text-5xl">
+            <h2 className="font-display text-4xl font-bold leading-tight tracking-tight text-fg md:text-5xl">
               Business to Wallet
               <br />
-              <span className="text-accent">with BlockPay</span>
+              with BlockPay
             </h2>
-            <p className="mt-6 max-w-md text-zinc-300">
+            <p className="mt-6 max-w-md text-fg-muted">
               Experience the fluidity of transactions with BlockPay as we guide
               you through the effortless flow from business initiation to
               wallet settlement. Discover the power of decentralized payments,

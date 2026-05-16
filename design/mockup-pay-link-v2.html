@@ -1,0 +1,456 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>BlockPay v2 — Pay Link (Stealth palette)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --bg: #000000;
+    --panel: #0a0d0b;
+    --card: #0e1411;
+    --elev: #141a16;
+    --fg: #f3f5f3;
+    --fg-muted: #9aa39c;
+    --fg-subtle: #5f6863;
+    --accent: #4ade80;
+    --mint: #7af0b1;
+    --border: rgba(255, 255, 255, 0.06);
+    --border-strong: rgba(255, 255, 255, 0.12);
+    --border-active: rgba(74, 222, 128, 0.45);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body {
+    background: var(--bg);
+    color: var(--fg);
+    font-family: 'Manrope', ui-sans-serif, system-ui;
+    font-size: 15px;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+    min-height: 100vh;
+  }
+  .display { font-family: 'Space Grotesk', sans-serif; letter-spacing: -0.02em; }
+  .mono { font-family: 'JetBrains Mono', monospace; }
+  .tnum { font-variant-numeric: tabular-nums slashed-zero; }
+
+  /* ambient grid background */
+  body::before {
+    content: ""; position: fixed; inset: 0; z-index: -2;
+    background-image:
+      linear-gradient(rgba(74,222,128,0.025) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(74,222,128,0.025) 1px, transparent 1px);
+    background-size: 56px 56px;
+    mask-image: radial-gradient(ellipse 80% 60% at 50% 30%, black, transparent 75%);
+    -webkit-mask-image: radial-gradient(ellipse 80% 60% at 50% 30%, black, transparent 75%);
+    pointer-events: none;
+  }
+  /* soft accent vignette behind hero */
+  body::after {
+    content: ""; position: fixed; left: 50%; top: 18%; width: 800px; height: 600px;
+    margin-left: -400px;
+    background: radial-gradient(circle, rgba(74,222,128,0.12), transparent 60%);
+    z-index: -1; pointer-events: none;
+    filter: blur(20px);
+  }
+
+  /* top bar */
+  .topbar {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 20px 32px;
+    border-bottom: 1px solid var(--border);
+  }
+  .powered-link {
+    display: inline-flex; align-items: center; gap: 8px;
+    color: var(--fg-subtle); font-size: 12px;
+    text-decoration: none;
+  }
+  .powered-link strong { color: var(--fg-muted); font-weight: 500; }
+  .top-help { font-size: 13px; color: var(--fg-muted); text-decoration: none; }
+  .top-help:hover { color: var(--fg); }
+
+  /* main column */
+  .page {
+    max-width: 540px;
+    margin: 0 auto;
+    padding: 56px 24px 80px;
+    display: flex; flex-direction: column; gap: 36px;
+  }
+
+  /* MERCHANT STRIP */
+  .merchant {
+    display: flex; flex-direction: column; align-items: center; gap: 14px;
+    text-align: center;
+  }
+  .merchant-mark {
+    width: 64px; height: 64px;
+    border-radius: 18px;
+    background: linear-gradient(135deg, #1a3325, #0a1612);
+    border: 1px solid var(--border-active);
+    display: grid; place-items: center;
+    color: var(--accent);
+    font-family: 'Space Grotesk'; font-weight: 700; font-size: 24px;
+    box-shadow: 0 16px 40px -16px rgba(74,222,128,0.4), inset 0 1px 0 rgba(255,255,255,0.04);
+    position: relative;
+  }
+  .merchant-mark::before {
+    content: ""; position: absolute; inset: -2px; border-radius: 20px;
+    background: linear-gradient(135deg, rgba(74,222,128,0.4), transparent 50%);
+    z-index: -1; filter: blur(8px); opacity: 0.5;
+  }
+  .merchant-name {
+    font-family: 'Space Grotesk'; font-weight: 500; font-size: 18px;
+  }
+  .merchant-meta {
+    font-size: 13px; color: var(--fg-subtle);
+    display: inline-flex; align-items: center; gap: 8px;
+  }
+  .verified {
+    display: inline-flex; align-items: center; gap: 4px;
+    color: var(--mint); font-size: 11px;
+    padding: 2px 8px; border-radius: 999px;
+    background: rgba(122, 240, 177, 0.08);
+    border: 1px solid rgba(122, 240, 177, 0.18);
+  }
+  .verified svg { width: 11px; height: 11px; }
+
+  /* HERO AMOUNT */
+  .hero {
+    display: flex; flex-direction: column; align-items: center; gap: 12px;
+    position: relative;
+  }
+  .hero-label {
+    font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase;
+    color: var(--fg-subtle);
+  }
+  .hero-amount {
+    font-family: 'Space Grotesk'; font-weight: 500;
+    font-size: 88px; letter-spacing: -0.045em;
+    line-height: 1; text-align: center;
+    display: flex; align-items: baseline; justify-content: center; gap: 4px;
+  }
+  .hero-currency {
+    font-size: 24px; color: var(--fg-subtle); font-weight: 500;
+    letter-spacing: 0; align-self: flex-start;
+    margin-top: 16px;
+  }
+  .hero-cents {
+    font-size: 40px; color: var(--fg-muted);
+  }
+  .hero-desc {
+    color: var(--fg-muted); font-size: 14px; text-align: center;
+    max-width: 380px; line-height: 1.6;
+  }
+
+  /* PAY CARD */
+  .pay-card {
+    background: linear-gradient(180deg, rgba(20, 28, 22, 0.6) 0%, rgba(8, 14, 10, 0.6) 100%);
+    border: 1px solid var(--border-active);
+    border-radius: 22px;
+    padding: 24px;
+    position: relative;
+    box-shadow: 0 24px 60px -28px rgba(0,0,0,0.8), 0 0 60px -30px rgba(74,222,128,0.25);
+  }
+  .pay-card-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; font-size: 12px; }
+  .pay-card-label { color: var(--fg-subtle); letter-spacing: 0.06em; text-transform: uppercase; font-family: 'JetBrains Mono'; font-size: 10px; }
+  .fee-link { color: var(--fg-muted); text-decoration: none; }
+  .fee-link:hover { color: var(--fg); }
+
+  /* recommended method */
+  .recommended {
+    display: flex; align-items: center; gap: 14px;
+    padding: 14px 16px;
+    background: rgba(74,222,128,0.05);
+    border: 1px solid var(--border-active);
+    border-radius: 14px;
+    margin-bottom: 14px;
+    cursor: pointer;
+    transition: background 160ms ease;
+  }
+  .recommended:hover { background: rgba(74,222,128,0.09); }
+  .method-icon {
+    width: 36px; height: 36px; border-radius: 10px;
+    background: var(--elev);
+    border: 1px solid var(--border-strong);
+    display: grid; place-items: center;
+    color: var(--accent);
+    font-family: 'Space Grotesk'; font-weight: 700; font-size: 14px;
+  }
+  .method-info { flex: 1; }
+  .method-info .name { font-weight: 500; font-size: 14px; display: flex; align-items: center; gap: 8px; }
+  .method-info .sub { color: var(--fg-subtle); font-size: 12px; margin-top: 2px; }
+  .recommend-tag {
+    font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase;
+    color: var(--accent); padding: 2px 6px;
+    border: 1px solid rgba(74, 222, 128, 0.3); border-radius: 4px;
+    font-family: 'JetBrains Mono';
+  }
+  .method-arrow {
+    color: var(--fg-subtle);
+    transition: transform 160ms ease, color 160ms ease;
+  }
+  .recommended:hover .method-arrow { transform: translateX(2px); color: var(--accent); }
+
+  .other-toggle {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-size: 13px; color: var(--fg-muted);
+    cursor: pointer;
+    margin-top: 4px;
+    transition: color 160ms ease;
+  }
+  .other-toggle:hover { color: var(--fg); }
+  .other-toggle .chev { transition: transform 240ms cubic-bezier(0.22, 1, 0.36, 1); }
+  .other-toggle.open .chev { transform: rotate(180deg); }
+
+  .other-list {
+    overflow: hidden;
+    max-height: 0;
+    margin-top: 0;
+    transition: max-height 280ms cubic-bezier(0.22, 1, 0.36, 1), margin-top 280ms ease;
+  }
+  .other-list.open { max-height: 360px; margin-top: 12px; }
+  .other-row {
+    display: flex; align-items: center; gap: 14px;
+    padding: 12px 14px;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    cursor: pointer;
+    margin-bottom: 8px;
+    transition: border-color 160ms ease, background 160ms ease;
+  }
+  .other-row:hover { border-color: var(--border-strong); background: rgba(255,255,255,0.02); }
+  .other-row .method-icon { color: var(--fg-muted); }
+
+  /* PAY CTA */
+  .cta-row { display: flex; flex-direction: column; gap: 10px; margin-top: 22px; }
+  .pay-cta {
+    width: 100%;
+    padding: 18px 24px;
+    border-radius: 14px;
+    background: var(--accent);
+    color: #052e16;
+    border: none;
+    font-family: 'Manrope', sans-serif;
+    font-weight: 600; font-size: 15px;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center; gap: 10px;
+    transition: transform 80ms ease, background 160ms ease;
+    box-shadow: 0 12px 32px -12px rgba(74,222,128,0.5);
+  }
+  .pay-cta:hover { background: #5eea8d; }
+  .pay-cta:active { transform: translateY(2px); }
+
+  .alt-cta {
+    width: 100%;
+    padding: 14px 24px;
+    border-radius: 14px;
+    background: transparent;
+    color: var(--fg-muted);
+    border: 1px solid var(--border-strong);
+    font-family: inherit; font-weight: 500; font-size: 14px;
+    cursor: pointer;
+    transition: all 160ms ease;
+  }
+  .alt-cta:hover { color: var(--fg); border-color: var(--fg-muted); }
+
+  /* trust strip */
+  .trust {
+    display: flex; gap: 18px; justify-content: center; flex-wrap: wrap;
+    color: var(--fg-subtle); font-size: 12px;
+    margin-top: 4px;
+  }
+  .trust span { display: inline-flex; align-items: center; gap: 6px; }
+  .trust .dot { width: 4px; height: 4px; border-radius: 50%; background: currentColor; opacity: 0.5; }
+
+  /* details accordion */
+  .details {
+    border-top: 1px solid var(--border);
+    padding-top: 24px;
+  }
+  .details-title {
+    font-size: 12px; color: var(--fg-subtle);
+    letter-spacing: 0.08em; text-transform: uppercase;
+    margin-bottom: 14px;
+    font-family: 'JetBrains Mono';
+  }
+  .detail-row {
+    display: flex; justify-content: space-between;
+    font-size: 13px; padding: 8px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .detail-row:last-child { border-bottom: none; }
+  .detail-key { color: var(--fg-muted); }
+  .detail-val { color: var(--fg); }
+  .detail-val.mono { font-family: 'JetBrains Mono'; font-size: 12px; }
+  .copy-btn {
+    display: inline-flex; align-items: center; gap: 4px;
+    color: var(--fg-subtle);
+    margin-left: 6px;
+    cursor: pointer;
+    transition: color 160ms ease;
+  }
+  .copy-btn:hover { color: var(--accent); }
+
+  /* footer */
+  .footer-link-row {
+    display: flex; justify-content: center; gap: 18px;
+    font-size: 12px; color: var(--fg-subtle);
+    margin-top: 8px;
+  }
+  .footer-link-row a { color: inherit; text-decoration: none; }
+  .footer-link-row a:hover { color: var(--fg); }
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <a class="powered-link" href="#">
+    Secured by <strong>BlockPay</strong>
+  </a>
+  <a class="top-help" href="#">Need help?</a>
+</header>
+
+<main class="page">
+
+  <!-- Merchant strip -->
+  <section class="merchant">
+    <div class="merchant-mark">NS</div>
+    <div class="merchant-name">Northwind Studios</div>
+    <div class="merchant-meta">
+      northwind.studio
+      <span class="verified">
+        <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6.5l2 2 4-4.5"/></svg>
+        Verified
+      </span>
+    </div>
+  </section>
+
+  <!-- Hero amount -->
+  <section class="hero">
+    <div class="hero-label">Amount due</div>
+    <div class="hero-amount tnum">
+      <span class="hero-currency">$</span>
+      <span id="hero-int">1,249</span><span class="hero-cents">.<span id="hero-frac">50</span></span>
+    </div>
+    <div class="hero-desc">
+      Studio plan, annual renewal. Includes 12 seats and unlimited exports through May 2027.
+    </div>
+  </section>
+
+  <!-- Pay card -->
+  <section class="pay-card">
+    <div class="pay-card-head">
+      <span class="pay-card-label">Payment</span>
+      <a class="fee-link" href="#">View fees</a>
+    </div>
+
+    <div class="recommended">
+      <div class="method-icon">U</div>
+      <div class="method-info">
+        <div class="name">USDC on Base <span class="recommend-tag">Recommended</span></div>
+        <div class="sub">Settles in ~2 seconds · network fee &lt; $0.01</div>
+      </div>
+      <svg class="method-arrow" width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M5 8h7M9 5l3 3-3 3"/></svg>
+    </div>
+
+    <div class="other-toggle" id="otherToggle">
+      Or pay with another method
+      <svg class="chev" width="11" height="11" viewBox="0 0 11 11" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 4.5l2.5 2.5L8 4.5"/></svg>
+    </div>
+    <div class="other-list" id="otherList">
+      <div class="other-row">
+        <div class="method-icon">U</div>
+        <div class="method-info"><div class="name">USDC on Solana</div><div class="sub">Settles in ~5 seconds</div></div>
+        <svg class="method-arrow" width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M5 8h7M9 5l3 3-3 3"/></svg>
+      </div>
+      <div class="other-row">
+        <div class="method-icon">E</div>
+        <div class="method-info"><div class="name">USDC on Ethereum</div><div class="sub">Settles in ~15 minutes · higher fee</div></div>
+        <svg class="method-arrow" width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M5 8h7M9 5l3 3-3 3"/></svg>
+      </div>
+      <div class="other-row">
+        <div class="method-icon">P</div>
+        <div class="method-info"><div class="name">PYUSD on Solana</div><div class="sub">Settles in ~5 seconds</div></div>
+        <svg class="method-arrow" width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M5 8h7M9 5l3 3-3 3"/></svg>
+      </div>
+    </div>
+
+    <div class="cta-row">
+      <button class="pay-cta">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M2 5h12l-1.5 7h-9L2 5z"/><path d="M5 5V3h6v2"/></svg>
+        Connect wallet to pay $1,249.50
+      </button>
+      <button class="alt-cta">Pay with card instead</button>
+    </div>
+  </section>
+
+  <!-- Trust strip -->
+  <div class="trust">
+    <span><span class="dot"></span>Non-custodial</span>
+    <span><span class="dot"></span>Funds go directly to merchant</span>
+    <span><span class="dot"></span>No KYC required</span>
+  </div>
+
+  <!-- Invoice details -->
+  <section class="details">
+    <div class="details-title">Invoice details</div>
+    <div class="detail-row">
+      <div class="detail-key">Invoice</div>
+      <div class="detail-val mono">04823-NS-2026 <span class="copy-btn"><svg width="11" height="11" viewBox="0 0 11 11" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="2" width="5" height="7" rx="1"/><path d="M4 4h5v5"/></svg></span></div>
+    </div>
+    <div class="detail-row">
+      <div class="detail-key">Reference</div>
+      <div class="detail-val">renewal-may-2026</div>
+    </div>
+    <div class="detail-row">
+      <div class="detail-key">Issued by</div>
+      <div class="detail-val">Northwind Studios LLC · Delaware, US</div>
+    </div>
+    <div class="detail-row">
+      <div class="detail-key">Amount</div>
+      <div class="detail-val tnum">$1,249.50 USD</div>
+    </div>
+    <div class="detail-row">
+      <div class="detail-key">Expires</div>
+      <div class="detail-val">May 23, 2026 · 11:59 PM UTC</div>
+    </div>
+  </section>
+
+  <div class="footer-link-row">
+    <a href="#">Terms</a>
+    <a href="#">Privacy</a>
+    <a href="#">Refund policy</a>
+    <a href="#">Report fraud</a>
+  </div>
+
+</main>
+
+<script>
+  // toggle other methods
+  const t = document.getElementById('otherToggle');
+  const l = document.getElementById('otherList');
+  t.addEventListener('click', () => { t.classList.toggle('open'); l.classList.toggle('open'); });
+
+  // subtle hero amount tick — every 7s a tiny update demonstrating numeric roll
+  // (in real product this would only run if the invoice was variable-priced)
+  // demo only: roll the cents
+  const fracEl = document.getElementById('hero-frac');
+  let lastFrac = '50';
+  function roll(el, target) {
+    if (el.textContent === target) return;
+    el.style.transition = 'transform 220ms ease-out, opacity 220ms ease-out';
+    el.style.transform = 'translateY(-6px)'; el.style.opacity = '0';
+    setTimeout(() => {
+      el.textContent = target;
+      el.style.transform = 'translateY(6px)';
+      requestAnimationFrame(() => { el.style.transform = 'translateY(0)'; el.style.opacity = '1'; });
+    }, 220);
+  }
+  // demo: keep cents stable; commented out by default to keep hero feeling solid
+  // setInterval(() => { ... }, 7000);
+</script>
+
+</body>
+</html>

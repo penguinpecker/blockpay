@@ -1,5 +1,6 @@
 import { Nav } from "@/components/nav";
 import { Footer } from "@/components/footer";
+import { PaletteScope } from "@/components/palette-scope";
 
 type Country = {
   name: string;
@@ -42,20 +43,23 @@ const countries: Country[] = [
 
 export default function CountriesPage() {
   return (
-    <>
+    <PaletteScope>
       <Nav active="Resources" />
       <main>
         <section className="relative overflow-hidden">
           <div className="absolute inset-0 bg-grid bg-grid-fade" aria-hidden="true" />
-          <div className="absolute inset-x-0 top-0 h-[640px] bg-[radial-gradient(ellipse_at_top,rgba(74,222,128,0.08),transparent_70%)]" />
+          <div className="absolute inset-x-0 top-0 h-[640px] bg-[radial-gradient(ellipse_at_top,color-mix(in_srgb,var(--accent)_8%,transparent),transparent_70%)]" />
           <div className="relative mx-auto max-w-7xl px-8 pt-40 pb-12 text-center">
-            <span className="inline-flex items-center rounded-full border border-[rgba(74,222,128,0.35)] bg-[rgba(74,222,128,0.06)] px-3 py-1 text-xs font-medium uppercase tracking-[0.18em] text-accent">
+            <span className="inline-flex items-center rounded-full border border-[var(--border-strong)] bg-[var(--bg-elev)] px-3 py-1 text-xs font-medium uppercase tracking-[0.18em] text-fg-muted">
               Coverage
             </span>
-            <h1 className="mx-auto mt-6 max-w-3xl font-display text-5xl font-bold leading-[1.05] tracking-tight md:text-6xl">
+            <h1
+              className="mx-auto mt-6 max-w-3xl font-display text-5xl font-bold leading-[1.05] text-fg md:text-6xl"
+              style={{ letterSpacing: "-0.02em" }}
+            >
               Supported <span className="text-accent">countries</span>
             </h1>
-            <p className="mx-auto mt-7 max-w-2xl text-base text-zinc-300">
+            <p className="mx-auto mt-7 max-w-2xl text-base text-fg-muted">
               BlockPay payments work in 30+ countries today; merchants must
               verify local compliance before going live.
             </p>
@@ -70,10 +74,10 @@ export default function CountriesPage() {
                   key={c.iso}
                   className="card-frame-tight flex items-center justify-between px-5 py-4"
                 >
-                  <span className="font-display text-base font-semibold text-white">
+                  <span className="font-display text-base font-semibold text-fg">
                     {c.name}
                   </span>
-                  <span className="font-mono text-xs uppercase tracking-[0.16em] text-accent">
+                  <span className="font-mono text-xs uppercase tracking-[0.16em] text-fg-muted">
                     {c.iso}
                   </span>
                 </div>
@@ -83,6 +87,6 @@ export default function CountriesPage() {
         </section>
       </main>
       <Footer />
-    </>
+    </PaletteScope>
   );
 }

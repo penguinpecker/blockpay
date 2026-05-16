@@ -2,6 +2,7 @@ import Link from "next/link";
 import { ChevronRight } from "lucide-react";
 import { Nav } from "@/components/nav";
 import { Footer } from "@/components/footer";
+import { PaletteScope } from "@/components/palette-scope";
 import {
   IlloMiner,
   IlloCloud,
@@ -25,11 +26,7 @@ const blocks: FeatureBlock[] = [
   {
     num: "01",
     eyebrow: "Gasless checkout",
-    title: (
-      <>
-        Customers never need a <span className="text-accent">gas token</span>.
-      </>
-    ),
+    title: <>Customers never need a gas token.</>,
     body: "BlockPay sponsors gas via Circle Paymaster so buyers pay only in the token they already hold. No ETH, SOL, or chain-native fee dance — just sign and settle.",
     bullets: [
       "Paymaster underwrites every transfer, no wallet top-up needed",
@@ -41,11 +38,7 @@ const blocks: FeatureBlock[] = [
   {
     num: "02",
     eyebrow: "Cross-chain settlement",
-    title: (
-      <>
-        Pay on any chain, settle on <span className="text-accent">one</span>.
-      </>
-    ),
+    title: <>Pay on any chain, settle on one.</>,
     body: "Customers transact on the chain they prefer. You receive USDC on the chain you nominated for treasury — Circle CCTP handles the bridge with native burn-and-mint, never wrapped IOUs.",
     bullets: [
       "Routes across Ethereum, Solana, Base, Arbitrum, Polygon and Avalanche",
@@ -58,11 +51,7 @@ const blocks: FeatureBlock[] = [
   {
     num: "03",
     eyebrow: "Accept any token",
-    title: (
-      <>
-        Quote the cart in <span className="text-accent">any token</span>, settle in USDC.
-      </>
-    ),
+    title: <>Quote the cart in any token, settle in USDC.</>,
     body: "Buyers pay in whatever they hold — ETH, SOL, WBTC, memecoins, stablecoins. BlockPay swaps to USDC at a binding quote with the slippage cap you set. Your books stay clean.",
     bullets: [
       "Live multi-route quoting with binding price-locks for the buyer",
@@ -74,11 +63,7 @@ const blocks: FeatureBlock[] = [
   {
     num: "04",
     eyebrow: "Signed receipts",
-    title: (
-      <>
-        Every payment carries a <span className="text-accent">cryptographic</span> receipt.
-      </>
-    ),
+    title: <>Every payment carries a cryptographic receipt.</>,
     body: "Receipts are signed by the merchant key, pinned to IPFS, and referenced in the transaction memo — so wallets, accountants and tax tools can render a human-readable statement without trusting a third party.",
     bullets: [
       "Line items, taxes and customer fields embedded in the receipt",
@@ -91,11 +76,7 @@ const blocks: FeatureBlock[] = [
   {
     num: "05",
     eyebrow: "Recurring billing",
-    title: (
-      <>
-        Subscriptions that <span className="text-accent">renew on-chain</span>.
-      </>
-    ),
+    title: <>Subscriptions that renew on-chain.</>,
     body: "Programmable USDC allowances replace stored card data. Set the cadence, the cap, and the trial — BlockPay charges on schedule, sends dunning emails, and rotates allowances when they near expiry.",
     bullets: [
       "Permit-based allowances with merchant-side spend caps",
@@ -107,11 +88,7 @@ const blocks: FeatureBlock[] = [
   {
     num: "06",
     eyebrow: "Split payments",
-    title: (
-      <>
-        One payment, <span className="text-accent">routed to many</span> wallets.
-      </>
-    ),
+    title: <>One payment, routed to many wallets.</>,
     body: "For marketplaces, creator platforms and partnerships. Define recipients and basis points up front — BlockPay splits inside the settlement transaction so every party gets their share atomically.",
     bullets: [
       "Up to 16 recipients per transaction, basis-point precision",
@@ -124,11 +101,7 @@ const blocks: FeatureBlock[] = [
   {
     num: "07",
     eyebrow: "Compliance",
-    title: (
-      <>
-        Sanctions and KYT, <span className="text-accent">built in</span>.
-      </>
-    ),
+    title: <>Sanctions and KYT, built in.</>,
     body: "Every counterparty address is screened against OFAC and major sanctions lists before settlement. Tag transactions for travel-rule reporting and export to your accounting stack with one click.",
     bullets: [
       "Realtime OFAC and chain-analytics screening at checkout",
@@ -141,22 +114,25 @@ const blocks: FeatureBlock[] = [
 
 export default function FeaturesPage() {
   return (
-    <>
+    <PaletteScope>
       <Nav active="Features" />
       <main>
         <section className="relative overflow-hidden">
           <div className="absolute inset-0 bg-grid bg-grid-fade" aria-hidden="true" />
-          <div className="absolute inset-x-0 top-0 h-[640px] bg-[radial-gradient(ellipse_at_top,rgba(74,222,128,0.08),transparent_70%)]" />
+          <div className="absolute inset-x-0 top-0 h-[640px] bg-[radial-gradient(ellipse_at_top,color-mix(in_srgb,var(--accent)_8%,transparent),transparent_70%)]" />
           <div className="relative mx-auto max-w-7xl px-8 pt-40 pb-20">
             <div className="max-w-3xl">
-              <span className="inline-flex items-center rounded-full border border-[rgba(74,222,128,0.35)] bg-[rgba(74,222,128,0.06)] px-3 py-1 text-xs font-medium uppercase tracking-[0.18em] text-accent">
+              <span className="inline-flex items-center rounded-full border border-[var(--border-strong)] bg-[var(--bg-elev)] px-3 py-1 text-xs font-medium uppercase tracking-[0.18em] text-fg-muted">
                 Product
               </span>
-              <h1 className="mt-6 font-display text-5xl font-bold leading-[1.05] tracking-tight md:text-6xl">
+              <h1
+                className="mt-6 font-display text-5xl font-bold leading-[1.05] text-fg md:text-6xl"
+                style={{ letterSpacing: "-0.02em" }}
+              >
                 Every primitive your storefront needs to take{" "}
                 <span className="text-accent">stablecoin payments</span>.
               </h1>
-              <p className="mt-7 max-w-2xl text-base text-zinc-300">
+              <p className="mt-7 max-w-2xl text-base text-fg-muted">
                 BlockPay is opinionated about the boring stuff — gas, bridging,
                 receipts, compliance — so your team can focus on the parts of
                 checkout that actually move conversion.
@@ -184,13 +160,13 @@ export default function FeaturesPage() {
                 { k: "Tokens accepted", v: "180+", note: "swapped at quote-locked rates to USDC" },
               ].map((s) => (
                 <div key={s.k} className="card-frame-tight px-6 py-7">
-                  <div className="text-xs uppercase tracking-[0.18em] text-zinc-500">
+                  <div className="text-xs uppercase tracking-[0.18em] text-fg-subtle">
                     {s.k}
                   </div>
-                  <div className="mt-3 font-display text-4xl font-bold text-accent">
+                  <div className="tnum mt-3 font-display text-4xl font-bold text-fg">
                     {s.v}
                   </div>
-                  <div className="mt-2 text-sm text-zinc-400">{s.note}</div>
+                  <div className="mt-2 text-sm text-fg-muted">{s.note}</div>
                 </div>
               ))}
             </div>
@@ -200,11 +176,10 @@ export default function FeaturesPage() {
         <section className="px-8 py-24">
           <div className="mx-auto max-w-7xl">
             <div className="mx-auto max-w-2xl text-center">
-              <h2 className="font-display text-4xl font-bold tracking-tight md:text-5xl">
-                Seven deep features, one{" "}
-                <span className="text-accent">simple SDK</span>.
+              <h2 className="font-display text-4xl font-bold tracking-tight text-fg md:text-5xl">
+                Seven deep features, one simple SDK.
               </h2>
-              <p className="mt-5 text-zinc-400">
+              <p className="mt-5 text-fg-muted">
                 Each capability is exposed by the same checkout primitive. Enable
                 what you need, ignore the rest.
               </p>
@@ -219,10 +194,10 @@ export default function FeaturesPage() {
 
         <section className="px-8 pb-28">
           <div className="mx-auto max-w-5xl card-frame px-10 py-14 text-center md:px-16">
-            <h3 className="font-display text-3xl font-bold tracking-tight md:text-4xl">
-              Want a guided <span className="text-accent">technical walkthrough?</span>
+            <h3 className="font-display text-3xl font-bold tracking-tight text-fg md:text-4xl">
+              Want a guided technical walkthrough?
             </h3>
-            <p className="mx-auto mt-5 max-w-xl text-zinc-400">
+            <p className="mx-auto mt-5 max-w-xl text-fg-muted">
               Our solutions team will walk your engineers through the
               integration end-to-end on a 30-minute call.
             </p>
@@ -240,7 +215,7 @@ export default function FeaturesPage() {
         </section>
       </main>
       <Footer />
-    </>
+    </PaletteScope>
   );
 }
 
@@ -256,20 +231,20 @@ function FeatureCard({ block }: { block: FeatureBlock }) {
           <span className="font-display text-sm font-medium text-accent">
             {block.num}
           </span>
-          <span className="h-px w-10 bg-[rgba(74,222,128,0.4)]" aria-hidden="true" />
-          <span className="text-xs uppercase tracking-[0.18em] text-zinc-500">
+          <span className="h-px w-10 bg-[var(--border-strong)]" aria-hidden="true" />
+          <span className="text-xs uppercase tracking-[0.18em] text-fg-subtle">
             {block.eyebrow}
           </span>
         </div>
-        <h3 className="mt-5 font-display text-3xl font-semibold leading-[1.15] md:text-4xl">
+        <h3 className="mt-5 font-display text-3xl font-semibold leading-[1.15] text-fg md:text-4xl">
           {block.title}
         </h3>
-        <p className="mt-5 max-w-md text-zinc-400">{block.body}</p>
+        <p className="mt-5 max-w-md text-fg-muted">{block.body}</p>
         <ul className="mt-7 space-y-3">
           {block.bullets.map((b) => (
-            <li key={b} className="flex items-start gap-3 text-sm text-zinc-300">
+            <li key={b} className="flex items-start gap-3 text-sm text-fg">
               <span
-                className="mt-[7px] inline-block h-[6px] w-[6px] shrink-0 rounded-full bg-[#4ade80]"
+                className="mt-[7px] inline-block h-[6px] w-[6px] shrink-0 rounded-full bg-[var(--accent)]"
                 aria-hidden="true"
               />
               {b}

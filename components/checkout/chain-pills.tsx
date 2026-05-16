@@ -30,8 +30,8 @@ export function ChainPills({
             className={cn(
               "flex items-center gap-2 rounded-full border px-3.5 py-1.5 text-xs font-medium transition-colors",
               active
-                ? "border-[rgba(74,222,128,0.6)] bg-[rgba(74,222,128,0.12)] text-white"
-                : "border-white/10 bg-white/[0.02] text-zinc-400 hover:border-white/20 hover:text-white"
+                ? "border-[var(--border-active)] bg-[color-mix(in_srgb,var(--accent)_10%,transparent)] text-[var(--fg)]"
+                : "border-[var(--border)] bg-white/[0.02] text-[var(--fg-muted)] hover:border-[var(--border-strong)] hover:text-[var(--fg)]"
             )}
             aria-pressed={active}
           >

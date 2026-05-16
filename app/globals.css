@@ -1,26 +1,108 @@
 @import "tailwindcss";
 
+/* ============================================================
+   BlockPay v2 — three palettes, single design system
+   - Default :root = Stealth (evolution of current brand)
+   - .palette-vault = warm desaturated (marketing / grant deck)
+   - .palette-aurora = cool electric (dashboard / data viz)
+
+   Tailwind utilities pull from var(--bg-card) etc. so the SAME
+   class adapts to the surrounding palette class.
+   ============================================================ */
+
+:root,
+.palette-stealth {
+  --bg: #000000;
+  --bg-panel: #0a0d0b;
+  --bg-card: #0e1411;
+  --bg-elev: #141a16;
+
+  --fg: #f3f5f3;
+  --fg-muted: #9aa39c;
+  --fg-subtle: #5f6863;
+
+  --accent: #4ade80;
+  --accent-glow: #7af0b1;
+  --accent-deep: #052e16;
+  --mint: #7af0b1;
+
+  --border: rgba(255, 255, 255, 0.06);
+  --border-strong: rgba(255, 255, 255, 0.12);
+  --border-active: rgba(74, 222, 128, 0.45);
+
+  --warn: #f59e0b;
+  --error: #ef4444;
+}
+
+.palette-vault {
+  --bg: #0a0908;
+  --bg-panel: #15120f;
+  --bg-card: #1c1916;
+  --bg-elev: #252220;
+
+  --fg: #edebe8;
+  --fg-muted: #a8a39c;
+  --fg-subtle: #6b6660;
+
+  --accent: #d4a574;
+  --accent-glow: #e8c397;
+  --accent-deep: #2a1f12;
+  --mint: #7ec9a6;
+
+  --border: rgba(237, 235, 232, 0.07);
+  --border-strong: rgba(237, 235, 232, 0.14);
+  --border-active: rgba(212, 165, 116, 0.4);
+
+  --warn: #f59e0b;
+  --error: #ef4444;
+}
+
+.palette-aurora {
+  --bg: #06080d;
+  --bg-panel: #0a0e16;
+  --bg-card: #0e131d;
+  --bg-elev: #141a26;
+
+  --fg: #e7eaf2;
+  --fg-muted: #8a92a3;
+  --fg-subtle: #525968;
+
+  --accent: #3ee0a1;
+  --accent-glow: #7df5c4;
+  --accent-deep: #052e1d;
+  --mint: #7df5c4;
+
+  --border: rgba(231, 234, 242, 0.06);
+  --border-strong: rgba(231, 234, 242, 0.12);
+  --border-active: rgba(62, 224, 161, 0.45);
+
+  --warn: #f59e0b;
+  --error: #ef4444;
+
+  --chart-1: #3ee0a1;
+  --chart-2: #6aa6ff;
+  --chart-3: #c084fc;
+  --chart-4: #f59e0b;
+}
+
 @theme inline {
-  --color-bg: #000000;
-  --color-bg-panel: #0a0f0c;
-  --color-bg-card: #0c1310;
-  --color-bg-card-elevated: #111a14;
+  --color-bg: var(--bg);
+  --color-bg-panel: var(--bg-panel);
+  --color-bg-card: var(--bg-card);
+  --color-bg-elev: var(--bg-elev);
 
-  --color-fg: #ffffff;
-  --color-fg-muted: #a1a1aa;
-  --color-fg-subtle: #71717a;
+  --color-fg: var(--fg);
+  --color-fg-muted: var(--fg-muted);
+  --color-fg-subtle: var(--fg-subtle);
 
-  --color-accent: #4ade80;
-  --color-accent-bright: #5eea8d;
-  --color-accent-dim: #16a34a;
-  --color-accent-deep: #052e16;
-
-  --color-border: rgba(74, 222, 128, 0.18);
-  --color-border-strong: rgba(74, 222, 128, 0.35);
-  --color-border-muted: rgba(255, 255, 255, 0.06);
+  --color-accent: var(--accent);
+  --color-accent-glow: var(--accent-glow);
+  --color-mint: var(--mint);
+  --color-border: var(--border);
 
   --font-display: var(--font-space-grotesk), ui-sans-serif, system-ui;
   --font-sans: var(--font-manrope), ui-sans-serif, system-ui;
+  --font-mono: ui-monospace, SFMono-Regular, "JetBrains Mono", monospace;
 }
 
 :root {
@@ -29,118 +111,167 @@
 
 html,
 body {
-  background: #000;
-  color: #fff;
+  background: var(--bg);
+  color: var(--fg);
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
 }
 
 ::selection {
-  background: rgba(74, 222, 128, 0.3);
-  color: #fff;
+  background: color-mix(in srgb, var(--accent) 30%, transparent);
+  color: var(--fg);
 }
 
 @layer utilities {
+  /* Tabular numerals + slashed zero for money. Apply to every amount. */
+  .tnum {
+    font-variant-numeric: tabular-nums slashed-zero;
+    font-feature-settings: "tnum" 1, "zero" 1;
+  }
+
+  /* Cents at 60% size + opacity so magnitude reads first. */
+  .cents {
+    font-size: 0.6em;
+    opacity: 0.6;
+    font-variant-numeric: tabular-nums slashed-zero;
+  }
+
+  /* Background grid for hero sections — palette-aware. */
   .bg-grid {
-    background-image: linear-gradient(
-        to right,
-        rgba(74, 222, 128, 0.04) 1px,
-        transparent 1px
-      ),
-      linear-gradient(
-        to bottom,
-        rgba(74, 222, 128, 0.04) 1px,
-        transparent 1px
-      );
+    background-image:
+      linear-gradient(to right, color-mix(in srgb, var(--accent) 4%, transparent) 1px, transparent 1px),
+      linear-gradient(to bottom, color-mix(in srgb, var(--accent) 4%, transparent) 1px, transparent 1px);
     background-size: 48px 48px;
   }
-
   .bg-grid-fade {
     mask-image: radial-gradient(ellipse at top, #000 30%, transparent 75%);
-    -webkit-mask-image: radial-gradient(
-      ellipse at top,
-      #000 30%,
-      transparent 75%
-    );
+    -webkit-mask-image: radial-gradient(ellipse at top, #000 30%, transparent 75%);
   }
 
+  /* Card surface — neutral border by default, green only on the surface being acted on. */
   .card-frame {
-    background: linear-gradient(
-      180deg,
-      rgba(20, 28, 22, 0.6) 0%,
-      rgba(8, 14, 10, 0.6) 100%
-    );
-    border: 1px solid var(--color-border);
+    background: var(--bg-card);
+    border: 1px solid var(--border);
     border-radius: 24px;
   }
-
   .card-frame-tight {
-    background: rgba(10, 16, 12, 0.7);
-    border: 1px solid var(--color-border);
+    background: var(--bg-card);
+    border: 1px solid var(--border);
     border-radius: 16px;
   }
+  .card-active {
+    border-color: var(--border-active);
+  }
 
+  /* Pill buttons */
   .btn-pill {
     display: inline-flex;
     align-items: center;
     gap: 8px;
     padding: 12px 22px;
     border-radius: 999px;
-    background: rgba(5, 46, 22, 0.6);
-    border: 1px solid rgba(74, 222, 128, 0.55);
-    color: #4ade80;
+    background: color-mix(in srgb, var(--accent-deep) 60%, transparent);
+    border: 1px solid color-mix(in srgb, var(--accent) 55%, transparent);
+    color: var(--accent);
     font-weight: 500;
-    transition: all 160ms ease;
+    transition: transform 80ms ease, background 160ms ease, border-color 160ms ease;
   }
-
   .btn-pill:hover {
-    background: rgba(74, 222, 128, 0.16);
-    border-color: rgba(74, 222, 128, 0.85);
+    background: color-mix(in srgb, var(--accent) 16%, transparent);
+    border-color: color-mix(in srgb, var(--accent) 85%, transparent);
   }
-
+  .btn-pill:active {
+    transform: translateY(2px) scale(0.98);
+  }
   .btn-pill-solid {
     display: inline-flex;
     align-items: center;
     gap: 8px;
     padding: 12px 22px;
     border-radius: 999px;
-    background: #4ade80;
-    color: #052e16;
+    background: var(--accent);
+    color: var(--accent-deep);
     font-weight: 600;
-    transition: all 160ms ease;
+    transition: transform 80ms ease, background 160ms ease;
   }
-
   .btn-pill-solid:hover {
-    background: #5eea8d;
+    background: var(--accent-glow);
+  }
+  .btn-pill-solid:active {
+    transform: translateY(2px) scale(0.98);
   }
 
-  .text-accent {
-    color: var(--color-accent);
+  /* Accent text */
+  .text-accent { color: var(--accent); }
+  .text-mint { color: var(--mint); }
+  .text-muted { color: var(--fg-muted); }
+  .text-subtle { color: var(--fg-subtle); }
+
+  /* One-shot step-glow on active step (no loop) */
+  @keyframes step-glow {
+    0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--accent) 0%, transparent); }
+    20% { box-shadow: 0 0 28px 4px color-mix(in srgb, var(--accent) 55%, transparent); }
+    100% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--accent) 0%, transparent); }
+  }
+  .step-glow {
+    animation: step-glow 700ms ease-out 1;
   }
 
+  /* One-shot tx-confirmed shimmer (700ms, no loop) */
+  @keyframes tx-shimmer {
+    0%   { background-position: -200% 0; }
+    100% { background-position: 200% 0; }
+  }
+  .tx-shimmer {
+    background-image: linear-gradient(
+      100deg,
+      transparent 0%,
+      transparent 40%,
+      color-mix(in srgb, var(--accent) 24%, transparent) 50%,
+      transparent 60%,
+      transparent 100%
+    );
+    background-size: 200% 100%;
+    animation: tx-shimmer 700ms ease-out 1;
+  }
+
+  /* Soft accent vignette behind a hero number — not a gradient blob, a radial */
+  .hero-vignette {
+    position: relative;
+  }
+  .hero-vignette::before {
+    content: "";
+    position: absolute;
+    inset: -200px;
+    background: radial-gradient(
+      600px circle at center,
+      color-mix(in srgb, var(--accent) 12%, transparent) 0%,
+      transparent 70%
+    );
+    pointer-events: none;
+    z-index: 0;
+  }
+  .hero-vignette > * {
+    position: relative;
+    z-index: 1;
+  }
+
+  /* Glow for accented elements (used sparingly) */
   .glow-accent {
-    box-shadow: 0 0 40px -10px rgba(74, 222, 128, 0.35);
+    box-shadow: 0 0 40px -10px color-mix(in srgb, var(--accent) 35%, transparent);
   }
 
-  .dotted-vline {
-    background-image: linear-gradient(
-      to bottom,
-      rgba(74, 222, 128, 0.6) 50%,
-      transparent 50%
-    );
-    background-size: 2px 8px;
-    background-repeat: repeat-y;
-    width: 2px;
+  /* Status dot — fills with --accent / --mint / --warn / --error */
+  .status-dot {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 999px;
+    flex-shrink: 0;
   }
-
-  .dotted-hline {
-    background-image: linear-gradient(
-      to right,
-      rgba(74, 222, 128, 0.6) 50%,
-      transparent 50%
-    );
-    background-size: 8px 2px;
-    background-repeat: repeat-x;
-    height: 2px;
-  }
+  .status-dot-mint { background: var(--mint); }
+  .status-dot-active { background: var(--accent); box-shadow: 0 0 12px var(--accent); }
+  .status-dot-warn { background: var(--warn); }
+  .status-dot-error { background: var(--error); }
+  .status-dot-subtle { background: var(--fg-subtle); }
 }

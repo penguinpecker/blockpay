@@ -26,20 +26,20 @@ export function DataTable<T>({
   return (
     <div
       className={cn(
-        "overflow-hidden rounded-2xl border border-[rgba(74,222,128,0.18)] bg-[#0c1310]",
+        "overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--bg-card)]",
         className
       )}
     >
       <div className="overflow-x-auto">
         <table className="w-full border-collapse text-sm">
           <thead>
-            <tr className="border-b border-[rgba(74,222,128,0.18)] bg-[rgba(74,222,128,0.04)]">
+            <tr className="border-b border-[var(--border)] bg-[var(--bg-elev)]/40">
               {columns.map((col) => (
                 <th
                   key={col.key}
                   scope="col"
                   className={cn(
-                    "px-5 py-3.5 text-xs font-semibold uppercase tracking-wider text-zinc-400",
+                    "px-5 py-3 text-[10px] font-semibold uppercase tracking-widest text-[var(--fg-subtle)]",
                     col.align === "right"
                       ? "text-right"
                       : col.align === "center"
@@ -58,7 +58,7 @@ export function DataTable<T>({
               <tr>
                 <td
                   colSpan={columns.length}
-                  className="px-5 py-10 text-center text-sm text-zinc-500"
+                  className="px-5 py-10 text-center text-sm text-[var(--fg-subtle)]"
                 >
                   {emptyMessage}
                 </td>
@@ -68,16 +68,15 @@ export function DataTable<T>({
                 <tr
                   key={rowKey(row)}
                   className={cn(
-                    "transition-colors hover:bg-white/[0.02]",
-                    idx !== rows.length - 1 &&
-                      "border-b border-[rgba(74,222,128,0.08)]"
+                    "group transition-colors hover:bg-[var(--bg-elev)]/30",
+                    idx !== rows.length - 1 && "border-b border-[var(--border)]"
                   )}
                 >
                   {columns.map((col) => (
                     <td
                       key={col.key}
                       className={cn(
-                        "px-5 py-3.5 text-zinc-300",
+                        "px-5 py-3.5 text-[var(--fg-muted)]",
                         col.align === "right"
                           ? "text-right"
                           : col.align === "center"

@@ -1,142 +1,141 @@
+import { Users } from "lucide-react";
 import { DataTable, type Column } from "@/components/dashboard/data-table";
+import { EmptyState } from "@/components/dashboard/empty-state";
 import { PageHeader } from "@/components/dashboard/page-header";
+import { requireMerchant } from "@/components/dashboard/require-merchant";
+import {
+  formatAmount,
+  formatShortDateTime,
+  truncateAddress,
+} from "@/components/dashboard/format";
+import { prisma } from "@/lib/prisma";
 
-type Customer = {
-  id: string;
-  name: string;
-  handle: string;
-  ltv: string;
+export const dynamic = "force-dynamic";
+
+type CustomerRow = {
+  payer: string;
+  payerFull: string;
+  paymentCount: number;
+  totalAmount: string;
   lastPayment: string;
 };
 
-const customers: Customer[] = [
-  {
-    id: "cus_001",
-    name: "Lena Park",
-    handle: "lena@northwave.io",
-    ltv: "$4,820.00",
-    lastPayment: "May 15, 2026",
-  },
-  {
-    id: "cus_002",
-    name: "Rio Vance",
-    handle: "rio.eth",
-    ltv: "$2,640.20",
-    lastPayment: "May 15, 2026",
-  },
-  {
-    id: "cus_003",
-    name: "Parallax Studios",
-    handle: "studios@parallax.xyz",
-    ltv: "$12,890.00",
-    lastPayment: "May 15, 2026",
-  },
-  {
-    id: "cus_004",
-    name: "Mark Ellison",
-    handle: "mark@goodmail.com",
-    ltv: "$312.00",
-    lastPayment: "May 14, 2026",
-  },
-  {
-    id: "cus_005",
-    name: "Ana Bardem",
-    handle: "ana@northwave.io",
-    ltv: "$1,058.00",
-    lastPayment: "May 14, 2026",
-  },
-  {
-    id: "cus_006",
-    name: "Longtail Records",
-    handle: "vendor@longtail.co",
-    ltv: "$6,310.40",
-    lastPayment: "May 14, 2026",
-  },
-  {
-    id: "cus_007",
-    name: "Candlebox EU",
-    handle: "support@candlebox.eu",
-    ltv: "$3,420.00",
-    lastPayment: "May 14, 2026",
-  },
-  {
-    id: "cus_008",
-    name: "Rinka",
-    handle: "rinka.sol",
-    ltv: "$842.40",
-    lastPayment: "May 13, 2026",
-  },
-  {
-    id: "cus_009",
-    name: "Bridge42",
-    handle: "ops@bridge42.io",
-    ltv: "$18,204.00",
-    lastPayment: "May 13, 2026",
-  },
-  {
-    id: "cus_010",
-    name: "Alex Rune",
-    handle: "alex.eth",
-    ltv: "$496.00",
-    lastPayment: "May 13, 2026",
-  },
-];
-
-function initials(name: string) {
-  return name
-    .split(" ")
-    .map((p) => p[0])
-    .slice(0, 2)
-    .join("")
-    .toUpperCase();
+function initials(addr: string) {
+  return addr.replace(/^0x/i, "").slice(0, 2).toUpperCase();
 }
 
-const columns: Column<Customer>[] = [
-  {
-    key: "name",
-    header: "Customer",
-    render: (r) => (
-      <div className="flex items-center gap-3">
-        <div className="grid h-8 w-8 place-items-center rounded-lg bg-[rgba(74,222,128,0.12)] font-display text-xs font-bold text-[#4ade80]">
-          {initials(r.name)}
-        </div>
-        <span className="font-medium text-white">{r.name}</span>
-      </div>
-    ),
-  },
-  {
-    key: "handle",
-    header: "Email or handle",
-    render: (r) => (
-      <span className="font-mono text-xs text-zinc-400">{r.handle}</span>
-    ),
-  },
-  {
-    key: "ltv",
-    header: "Lifetime value",
-    align: "right",
-    render: (r) => <span className="font-medium text-white">{r.ltv}</span>,
-  },
-  {
-    key: "lastPayment",
-    header: "Last payment",
-    align: "right",
-    render: (r) => (
-      <span className="whitespace-nowrap text-xs text-zinc-400">
-        {r.lastPayment}
-      </span>
-    ),
-  },
-];
+export default async function CustomersPage() {
+  const { merchant } = await requireMerchant("/dashboard/customers");
+  const settlementAddressLower = merchant.settlementAddress.toLowerCase();
 
-export default function CustomersPage() {
+  const grouped = await prisma.payment.groupBy({
+    by: ["payer"],
+    where: { merchantAddress: settlementAddressLower },
+    _count: { _all: true },
+    _max: { blockTimestamp: true },
+  });
+
+  // For totals we need a separate aggregation since amount is stored as a
+  // string column. Pull amount/payer rows and sum manually.
+  const rawRows = await prisma.payment.findMany({
+    where: { merchantAddress: settlementAddressLower },
+    select: { payer: true, amount: true, blockTimestamp: true },
+  });
+
+  const totalsByPayer = new Map<string, bigint>();
+  for (const r of rawRows) {
+    try {
+      const cur = totalsByPayer.get(r.payer) ?? BigInt(0);
+      totalsByPayer.set(r.payer, cur + BigInt(r.amount));
+    } catch {
+      // skip unparseable
+    }
+  }
+
+  const currency = merchant.settlementCurrency;
+
+  const rows: CustomerRow[] = grouped
+    .map((g) => ({
+      payer: truncateAddress(g.payer),
+      payerFull: g.payer,
+      paymentCount: g._count._all,
+      totalAmount: formatAmount(
+        (totalsByPayer.get(g.payer) ?? BigInt(0)).toString(),
+        currency,
+      ),
+      lastPayment: g._max.blockTimestamp
+        ? formatShortDateTime(g._max.blockTimestamp)
+        : "—",
+      lastPaymentDate: g._max.blockTimestamp ?? new Date(0),
+    }))
+    .sort(
+      (a, b) => b.lastPaymentDate.getTime() - a.lastPaymentDate.getTime(),
+    )
+    .map(({ lastPaymentDate: _drop, ...rest }) => {
+      void _drop;
+      return rest;
+    });
+
+  const columns: Column<CustomerRow>[] = [
+    {
+      key: "name",
+      header: "Customer",
+      render: (r) => (
+        <div className="flex items-center gap-3">
+          <div className="grid h-8 w-8 place-items-center rounded-lg bg-[rgba(74,222,128,0.12)] font-display text-xs font-bold text-[#4ade80]">
+            {initials(r.payerFull)}
+          </div>
+          <span className="font-mono text-xs text-white">{r.payer}</span>
+        </div>
+      ),
+    },
+    {
+      key: "count",
+      header: "Payments",
+      align: "right",
+      render: (r) => (
+        <span className="font-medium text-white">{r.paymentCount}</span>
+      ),
+    },
+    {
+      key: "total",
+      header: "Total volume",
+      align: "right",
+      render: (r) => (
+        <span className="font-medium text-white">{r.totalAmount}</span>
+      ),
+    },
+    {
+      key: "lastPayment",
+      header: "Last payment",
+      align: "right",
+      render: (r) => (
+        <span className="whitespace-nowrap text-xs text-zinc-400">
+          {r.lastPayment}
+        </span>
+      ),
+    },
+  ];
+
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
         title="Customers"
         description="Everyone who has ever paid through your account. Sorted by most recent activity."
       />
-      <DataTable columns={columns} rows={customers} rowKey={(r) => r.id} />
+      {rows.length === 0 ? (
+        <EmptyState
+          icon={Users}
+          title="No customers yet"
+          body="Once a wallet pays one of your invoices or payment links, it shows up here with lifetime totals and last-seen activity."
+          cta={{
+            label: "Create an invoice",
+            href: "/dashboard/invoices?new=1",
+          }}
+        />
+      ) : (
+        <DataTable columns={columns} rows={rows} rowKey={(r) => r.payerFull} />
+      )}
     </div>
   );
 }

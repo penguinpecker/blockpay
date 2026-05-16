@@ -13,11 +13,11 @@ const TOKEN_COLORS: Record<TokenId, string> = {
 
 const TOKENS: TokenId[] = ["USDC", "USDT", "ETH", "SOL"];
 
-function TokenDot({ token }: { token: TokenId }) {
+export function TokenDot({ token, size = 18 }: { token: TokenId; size?: number }) {
   return (
     <svg
-      width="18"
-      height="18"
+      width={size}
+      height={size}
       viewBox="0 0 18 18"
       fill="none"
       aria-hidden="true"
@@ -46,19 +46,19 @@ export function TokenSelect({
   onChange: (next: TokenId) => void;
 }) {
   return (
-    <label className="group relative flex items-center gap-3 rounded-2xl border border-white/10 bg-white/[0.02] px-4 py-3 transition-colors focus-within:border-[rgba(74,222,128,0.4)] hover:border-white/20">
+    <label className="group relative flex items-center gap-3 rounded-2xl border border-[var(--border)] bg-white/[0.02] px-4 py-3 transition-colors focus-within:border-[var(--border-active)] hover:border-[var(--border-strong)]">
       <TokenDot token={value} />
       <div className="flex-1">
-        <div className="text-[10px] uppercase tracking-wider text-zinc-500">
+        <div className="text-[10px] uppercase tracking-wider text-[var(--fg-subtle)]">
           Pay with
         </div>
-        <div className="font-display text-sm font-semibold text-white">
+        <div className="font-display text-sm font-semibold text-[var(--fg)] tnum">
           {value}
         </div>
       </div>
       <ChevronDown
         size={16}
-        className="text-zinc-500 transition-colors group-hover:text-white"
+        className="text-[var(--fg-subtle)] transition-colors group-hover:text-[var(--fg)]"
         aria-hidden="true"
       />
       <select
@@ -68,7 +68,7 @@ export function TokenSelect({
         aria-label="Select payment token"
       >
         {TOKENS.map((t) => (
-          <option key={t} value={t} className="bg-[#0c1310] text-white">
+          <option key={t} value={t} className="bg-[var(--bg-card)] text-[var(--fg)]">
             {t}
           </option>
         ))}

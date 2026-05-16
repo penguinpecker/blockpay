@@ -36,10 +36,10 @@ export function CompareSection() {
     <section className="px-8 py-24">
       <div className="mx-auto max-w-7xl">
         <div className="mx-auto max-w-2xl text-center">
-          <h2 className="font-display text-4xl font-bold tracking-tight md:text-5xl">
-            Why Choose <span className="text-accent">BlockPay?</span>
+          <h2 className="font-display text-4xl font-bold tracking-tight text-fg md:text-5xl">
+            Why Choose BlockPay?
           </h2>
-          <p className="mt-5 text-zinc-400">
+          <p className="mt-5 text-fg-muted">
             At BlockPay, we stand at the forefront of Web3 payments, offering a
             revolutionary alternative to traditional payment gateways. Below is
             a comprehensive comparison highlighting the advantages of choosing
@@ -47,8 +47,8 @@ export function CompareSection() {
           </p>
         </div>
 
-        <div className="mt-14 overflow-hidden rounded-2xl border border-[rgba(74,222,128,0.25)]">
-          <div className="grid grid-cols-[1.1fr_1.4fr_1.4fr] bg-[rgba(74,222,128,0.06)] text-accent">
+        <div className="mt-14 overflow-hidden rounded-2xl border border-[var(--border)]">
+          <div className="grid grid-cols-[1.1fr_1.4fr_1.4fr] bg-[var(--bg-elev)] text-fg">
             <Cell heading>Criteria</Cell>
             <Cell heading>BlockPay</Cell>
             <Cell heading>Traditional Gateways</Cell>
@@ -58,7 +58,7 @@ export function CompareSection() {
               key={r.criteria}
               className={`grid grid-cols-[1.1fr_1.4fr_1.4fr] ${
                 i !== rows.length - 1
-                  ? "border-b border-[rgba(74,222,128,0.18)]"
+                  ? "border-b border-[var(--border)]"
                   : ""
               }`}
             >
@@ -88,8 +88,8 @@ function Cell({
         heading
           ? "font-display text-base font-semibold"
           : strong
-            ? "border-r border-[rgba(74,222,128,0.18)] font-display text-base font-semibold text-white"
-            : "border-r border-[rgba(74,222,128,0.18)] text-sm text-zinc-300 last:border-r-0"
+            ? "border-r border-[var(--border)] font-display text-base font-semibold text-fg"
+            : "border-r border-[var(--border)] text-sm text-fg-muted last:border-r-0"
       }`}
     >
       {children}

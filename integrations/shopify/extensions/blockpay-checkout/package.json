@@ -1,0 +1,7 @@
+{
+  "name": "blockpay-checkout-extension",
+  "version": "0.1.0",
+  "private": true,
+  "description": "BlockPay theme app extension: adds a Pay-with-crypto CTA to the cart and product pages.",
+  "license": "MIT"
+}

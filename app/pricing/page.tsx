@@ -2,6 +2,7 @@ import Link from "next/link";
 import { ChevronRight, Check } from "lucide-react";
 import { Nav } from "@/components/nav";
 import { Footer } from "@/components/footer";
+import { PaletteScope } from "@/components/palette-scope";
 
 type Tier = {
   name: string;
@@ -72,20 +73,23 @@ const feeRows = [
 
 export default function PricingPage() {
   return (
-    <>
+    <PaletteScope>
       <Nav active="Pricing" />
       <main>
         <section className="relative overflow-hidden">
           <div className="absolute inset-0 bg-grid bg-grid-fade" aria-hidden="true" />
-          <div className="absolute inset-x-0 top-0 h-[640px] bg-[radial-gradient(ellipse_at_top,rgba(74,222,128,0.08),transparent_70%)]" />
+          <div className="absolute inset-x-0 top-0 h-[640px] bg-[radial-gradient(ellipse_at_top,color-mix(in_srgb,var(--accent)_8%,transparent),transparent_70%)]" />
           <div className="relative mx-auto max-w-7xl px-8 pt-40 pb-16 text-center">
-            <span className="inline-flex items-center rounded-full border border-[rgba(74,222,128,0.35)] bg-[rgba(74,222,128,0.06)] px-3 py-1 text-xs font-medium uppercase tracking-[0.18em] text-accent">
+            <span className="inline-flex items-center rounded-full border border-[var(--border-strong)] bg-[var(--bg-elev)] px-3 py-1 text-xs font-medium uppercase tracking-[0.18em] text-fg-muted">
               Pricing
             </span>
-            <h1 className="mx-auto mt-6 max-w-3xl font-display text-5xl font-bold leading-[1.05] tracking-tight md:text-6xl">
+            <h1
+              className="mx-auto mt-6 max-w-3xl font-display text-5xl font-bold leading-[1.05] text-fg md:text-6xl"
+              style={{ letterSpacing: "-0.02em" }}
+            >
               Pay for the <span className="text-accent">volume</span> you actually settle.
             </h1>
-            <p className="mx-auto mt-7 max-w-2xl text-base text-zinc-300">
+            <p className="mx-auto mt-7 max-w-2xl text-base text-fg-muted">
               No card-network surcharges. No hidden cross-border markups. A flat
               monthly platform fee, plus a transparent percentage on USDC volume
               — drops as you grow.
@@ -106,20 +110,20 @@ export default function PricingPage() {
         <section className="px-8 py-20">
           <div className="mx-auto max-w-5xl">
             <div className="mx-auto max-w-2xl text-center">
-              <h2 className="font-display text-4xl font-bold tracking-tight md:text-5xl">
-                Transparent <span className="text-accent">per-transaction</span> fees.
+              <h2 className="font-display text-4xl font-bold tracking-tight text-fg md:text-5xl">
+                Transparent per-transaction fees.
               </h2>
-              <p className="mt-5 text-zinc-400">
+              <p className="mt-5 text-fg-muted">
                 The percentage you pay on every USDC settlement, by tier. Cross-chain
                 routes are pass-through — what Circle charges, you pay.
               </p>
             </div>
-            <div className="mt-12 overflow-hidden rounded-2xl border border-[rgba(74,222,128,0.25)]">
-              <div className="grid grid-cols-[1.6fr_1fr] bg-[rgba(74,222,128,0.06)] text-accent">
+            <div className="mt-12 overflow-hidden rounded-2xl border border-[var(--border)]">
+              <div className="grid grid-cols-[1.6fr_1fr] bg-[var(--bg-elev)] text-fg">
                 <div className="px-6 py-5 font-display text-base font-semibold">
                   Fee type
                 </div>
-                <div className="border-l border-[rgba(74,222,128,0.18)] px-6 py-5 font-display text-base font-semibold">
+                <div className="border-l border-[var(--border)] px-6 py-5 font-display text-base font-semibold">
                   Rate
                 </div>
               </div>
@@ -128,20 +132,20 @@ export default function PricingPage() {
                   key={row.kind}
                   className={`grid grid-cols-[1.6fr_1fr] ${
                     i !== feeRows.length - 1
-                      ? "border-b border-[rgba(74,222,128,0.18)]"
+                      ? "border-b border-[var(--border)]"
                       : ""
                   }`}
                 >
-                  <div className="px-6 py-5 font-display text-base font-semibold text-white">
+                  <div className="px-6 py-5 font-display text-base font-semibold text-fg">
                     {row.kind}
                   </div>
-                  <div className="border-l border-[rgba(74,222,128,0.18)] px-6 py-5 text-sm text-zinc-300">
+                  <div className="tnum border-l border-[var(--border)] px-6 py-5 text-sm text-fg-muted">
                     {row.value}
                   </div>
                 </div>
               ))}
             </div>
-            <p className="mt-6 text-center text-sm text-zinc-500">
+            <p className="mt-6 text-center text-sm text-fg-subtle">
               Volume is computed monthly, in USD-equivalent settlement value.
               Cross-chain pass-through gas is reported on your monthly invoice.
             </p>
@@ -151,8 +155,8 @@ export default function PricingPage() {
         <section className="px-8 py-24">
           <div className="mx-auto max-w-7xl">
             <div className="mx-auto max-w-2xl text-center">
-              <h2 className="font-display text-4xl font-bold tracking-tight md:text-5xl">
-                Pricing <span className="text-accent">questions</span> we hear most.
+              <h2 className="font-display text-4xl font-bold tracking-tight text-fg md:text-5xl">
+                Pricing questions we hear most.
               </h2>
             </div>
             <div className="mt-14 grid gap-5 md:grid-cols-2">
@@ -175,10 +179,10 @@ export default function PricingPage() {
                 },
               ].map((f) => (
                 <div key={f.q} className="card-frame-tight px-7 py-6">
-                  <h3 className="font-display text-lg font-semibold text-white">
+                  <h3 className="font-display text-lg font-semibold text-fg">
                     {f.q}
                   </h3>
-                  <p className="mt-3 text-sm text-zinc-400">{f.a}</p>
+                  <p className="mt-3 text-sm text-fg-muted">{f.a}</p>
                 </div>
               ))}
             </div>
@@ -187,10 +191,10 @@ export default function PricingPage() {
 
         <section className="px-8 pb-28">
           <div className="mx-auto max-w-5xl card-frame px-10 py-14 text-center md:px-16">
-            <h3 className="font-display text-3xl font-bold tracking-tight md:text-4xl">
-              Ship checkout in an afternoon. <span className="text-accent">For free.</span>
+            <h3 className="font-display text-3xl font-bold tracking-tight text-fg md:text-4xl">
+              Ship checkout in an afternoon. For free.
             </h3>
-            <p className="mx-auto mt-5 max-w-xl text-zinc-400">
+            <p className="mx-auto mt-5 max-w-xl text-fg-muted">
               Sign up takes a minute. No card required to take your first ten
               thousand dollars of stablecoin volume.
             </p>
@@ -208,7 +212,7 @@ export default function PricingPage() {
         </section>
       </main>
       <Footer />
-    </>
+    </PaletteScope>
   );
 }
 
@@ -216,14 +220,12 @@ function TierCard({ tier }: { tier: Tier }) {
   const recommended = tier.recommended;
   return (
     <div
-      className={`relative flex h-full flex-col rounded-3xl p-8 md:p-10 ${
-        recommended
-          ? "border-2 border-[rgba(74,222,128,0.6)] bg-[linear-gradient(180deg,rgba(34,80,46,0.45)_0%,rgba(8,16,11,0.7)_100%)] glow-accent"
-          : "card-frame"
+      className={`card-frame relative flex h-full flex-col p-8 md:p-10 ${
+        recommended ? "card-active glow-accent" : ""
       }`}
     >
       {recommended && (
-        <span className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-[#4ade80] px-3 py-1 text-xs font-semibold uppercase tracking-[0.16em] text-[#052e16]">
+        <span className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-[var(--accent)] px-3 py-1 text-xs font-semibold uppercase tracking-[0.16em] text-[var(--accent-deep)]">
           Recommended
         </span>
       )}
@@ -231,18 +233,18 @@ function TierCard({ tier }: { tier: Tier }) {
         {tier.name}
       </div>
       <div className="mt-4 flex items-baseline gap-1">
-        <span className="font-display text-5xl font-bold tracking-tight text-white">
+        <span className="tnum font-display text-5xl font-bold tracking-tight text-fg">
           {tier.price}
         </span>
-        <span className="text-sm text-zinc-500">{tier.cadence}</span>
+        <span className="text-sm text-fg-subtle">{tier.cadence}</span>
       </div>
-      <p className="mt-3 text-sm text-zinc-400">{tier.pitch}</p>
-      <div className="my-7 h-px w-full bg-[rgba(74,222,128,0.18)]" />
+      <p className="mt-3 text-sm text-fg-muted">{tier.pitch}</p>
+      <div className="my-7 h-px w-full bg-[var(--border)]" />
       <ul className="space-y-3">
         {tier.features.map((f) => (
-          <li key={f} className="flex items-start gap-3 text-sm text-zinc-300">
+          <li key={f} className="flex items-start gap-3 text-sm text-fg">
             <span
-              className="mt-[2px] inline-flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-[rgba(74,222,128,0.18)] text-[#4ade80]"
+              className="mt-[2px] inline-flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-[color-mix(in_srgb,var(--accent)_18%,transparent)] text-accent"
               aria-hidden="true"
             >
               <Check size={11} strokeWidth={3} />

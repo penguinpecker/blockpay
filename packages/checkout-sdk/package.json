@@ -1,0 +1,83 @@
+{
+  "name": "@blockpay/checkout",
+  "version": "0.1.0",
+  "description": "Official BlockPay JavaScript / TypeScript SDK for accepting USDC and EURC stablecoin payments.",
+  "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    },
+    "./checkout": {
+      "types": "./dist/index.browser.d.ts",
+      "import": "./dist/index.browser.js",
+      "require": "./dist/index.browser.cjs"
+    },
+    "./invoices": {
+      "types": "./dist/invoices.d.ts",
+      "import": "./dist/invoices.js",
+      "require": "./dist/invoices.cjs"
+    },
+    "./webhooks": {
+      "types": "./dist/webhooks.d.ts",
+      "import": "./dist/webhooks.js",
+      "require": "./dist/webhooks.cjs"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit",
+    "clean": "rm -rf dist"
+  },
+  "keywords": [
+    "blockpay",
+    "USDC",
+    "EURC",
+    "stablecoin",
+    "payments",
+    "web3",
+    "checkout",
+    "crypto",
+    "ethereum",
+    "base",
+    "polygon"
+  ],
+  "author": "BlockPay",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/blockpay/checkout-sdk.git"
+  },
+  "bugs": {
+    "url": "https://github.com/blockpay/checkout-sdk/issues"
+  },
+  "homepage": "https://blockpay-six.vercel.app/docs/sdk",
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "viem": "^2.49.2"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.0",
+    "tsup": "^8.3.5",
+    "typescript": "^5.5.0",
+    "vitest": "^2.1.8"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

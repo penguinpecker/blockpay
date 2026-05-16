@@ -2,156 +2,454 @@ import Link from "next/link";
 import { ChevronRight, Boxes } from "lucide-react";
 import { Nav } from "@/components/nav";
 import { Footer } from "@/components/footer";
+import { PaletteScope } from "@/components/palette-scope";
 
 export const metadata = {
   title: "WordPress / WooCommerce integration — BlockPay docs",
   description:
-    "Install the BlockPay plugin in WooCommerce: six steps from download to a live USDC payment method in your store's checkout.",
+    "Three ways to put BlockPay on a WordPress site: the official WooCommerce plugin, a custom WC_Payment_Gateway on the blockpay/woocommerce SDK, and a standalone PHP integration for non-WooCommerce sites.",
 };
 
-type Step = {
-  n: number;
+const pluginSettings: { name: string; description: string }[] = [
+  {
+    name: "API key",
+    description:
+      "Your BlockPay secret key from dashboard.blockpay.dev → Developers. Stored in wp_options, never echoed back to the front-end.",
+  },
+  {
+    name: "Settlement wallet",
+    description:
+      "The address that receives USDC. Any EVM-compatible address — a Safe, a hardware wallet or a hot wallet.",
+  },
+  {
+    name: "Settlement chain",
+    description:
+      "Where you receive funds. Pick Arc for cheapest fees or Base for the largest USDC liquidity. Customers can still pay from any supported chain.",
+  },
+  {
+    name: "Webhook secret",
+    description:
+      "The shared secret used to sign incoming webhooks. The plugin validates every event before it touches the order.",
+  },
+];
+
+const composerInstall = `composer require blockpay/woocommerce`;
+
+const customGatewayCode = `<?php
+// wp-content/plugins/my-shop/includes/class-wc-mycustom-blockpay.php
+use BlockPay\\WooCommerce\\Client;
+use BlockPay\\WooCommerce\\WooHelpers;
+
+class WC_MyCustomBlockPay_Gateway extends WC_Payment_Gateway {
+    public function __construct() {
+        $this->id                 = 'mycustom_blockpay';
+        $this->method_title       = 'Pay with USDC (custom)';
+        $this->has_fields         = false;
+        $this->supports           = ['products', 'refunds'];
+        $this->init_form_fields();
+        $this->init_settings();
+    }
+
+    public function process_payment($order_id) {
+        $order   = wc_get_order($order_id);
+        $bp      = new Client(get_option('blockpay_api_key'));
+        $invoice = $bp->createInvoice(
+            WooHelpers::orderToInvoiceInput($order)
+        );
+
+        $order->update_status(
+            'pending',
+            __('Awaiting BlockPay settlement.', 'my-shop')
+        );
+
+        return [
+            'result'   => 'success',
+            'redirect' => $invoice->checkoutUrl,
+        ];
+    }
+}`;
+
+const webhookHandlerCode = `<?php
+// wp-content/plugins/my-shop/includes/blockpay-webhooks.php
+use BlockPay\\WooCommerce\\Webhooks;
+
+add_action('rest_api_init', function () {
+    register_rest_route('my-shop/v1', '/blockpay-webhook', [
+        'methods'             => 'POST',
+        'permission_callback' => '__return_true',
+        'callback'            => 'my_shop_handle_blockpay_event',
+    ]);
+});
+
+function my_shop_handle_blockpay_event(WP_REST_Request $req) {
+    $raw       = $req->get_body();
+    $signature = $req->get_header('x_blockpay_signature') ?? '';
+
+    $verified = Webhooks::verify([
+        'raw_body'  => $raw,
+        'signature' => $signature,
+        'secret'    => get_option('blockpay_webhook_secret'),
+    ]);
+
+    if (!$verified) {
+        return new WP_REST_Response('bad signature', 401);
+    }
+
+    $event = json_decode($raw, true);
+    if ($event['type'] === 'invoice.paid') {
+        $order_id = $event['data']['metadata']['order_id'] ?? null;
+        if ($order_id) {
+            $order = wc_get_order((int) $order_id);
+            $order->payment_complete($event['data']['txHash']);
+        }
+    }
+
+    return new WP_REST_Response('ok', 200);
+}`;
+
+const standaloneShortcodeCode = `<?php
+// Standalone use on a non-WooCommerce site:
+// a [blockpay_donate amount="25"] shortcode that
+// produces a checkout link without touching WC.
+use BlockPay\\WooCommerce\\Client;
+
+add_shortcode('blockpay_donate', function ($atts) {
+    $atts = shortcode_atts(['amount' => '10'], $atts);
+    $bp   = new Client(get_option('blockpay_api_key'));
+
+    $invoice = $bp->createInvoice([
+        'amount'          => (string) $atts['amount'],
+        'currency'        => 'USDC',
+        'chainKey'        => 'base',
+        'merchantAddress' => get_option('blockpay_settlement_wallet'),
+        'description'     => 'Donation to ' . get_bloginfo('name'),
+    ]);
+
+    return sprintf(
+        '<a class="blockpay-donate-btn" href="%s">Donate %s USDC</a>',
+        esc_url($invoice->checkoutUrl),
+        esc_html($atts['amount'])
+    );
+});`;
+
+const phpVerifyCode = `<?php
+// Manual signature verification, no SDK required.
+$raw    = file_get_contents('php://input');
+$sig    = $_SERVER['HTTP_X_BLOCKPAY_SIGNATURE'] ?? '';
+$secret = get_option('blockpay_webhook_secret');
+
+$expected = hash_hmac('sha256', $raw, $secret);
+if (!hash_equals($expected, $sig)) {
+    http_response_code(401);
+    exit('bad signature');
+}
+
+$event = json_decode($raw, true);
+// dispatch on $event['type']`;
+
+const eventInvoiceCreated = `{
+  "type": "invoice.created",
+  "data": {
+    "invoiceId": "inv_01HE2...",
+    "amount": "49.00",
+    "currency": "USDC",
+    "chainKey": "base",
+    "checkoutUrl": "https://blockpay.dev/pay/inv_01HE2...",
+    "metadata": { "order_id": "1042" }
+  }
+}`;
+
+const eventInvoicePaid = `{
+  "type": "invoice.paid",
+  "data": {
+    "invoiceId": "inv_01HE2...",
+    "amount": "49.00",
+    "currency": "USDC",
+    "chainKey": "base",
+    "txHash": "0x9b1c...e3f0",
+    "settledAt": 1715817600,
+    "metadata": { "order_id": "1042" }
+  }
+}`;
+
+const eventPaymentReceived = `{
+  "type": "payment.received",
+  "data": {
+    "invoiceId": "inv_01HE2...",
+    "amount": "49.00",
+    "currency": "USDC",
+    "chainKey": "base",
+    "fromAddress": "0xCustomerWallet",
+    "txHash": "0x9b1c...e3f0",
+    "confirmations": 1
+  }
+}`;
+
+const eventInvoiceExpired = `{
+  "type": "invoice.expired",
+  "data": {
+    "invoiceId": "inv_01HE2...",
+    "expiredAt": 1715819400,
+    "reason": "ttl"
+  }
+}`;
+
+const eventWebhookTest = `{
+  "type": "webhook.test",
+  "data": {
+    "deliveredAt": 1715820000,
+    "endpoint": "https://example.com/wp-json/my-shop/v1/blockpay-webhook"
+  }
+}`;
+
+type EventRow = {
+  type: string;
+  description: string;
+  payload: string;
+};
+
+const events: EventRow[] = [
+  {
+    type: "invoice.created",
+    description:
+      "Fires the moment an invoice is generated for a WooCommerce order. Use the metadata.order_id to wire the BlockPay invoice id back onto the WC order.",
+    payload: eventInvoiceCreated,
+  },
+  {
+    type: "invoice.paid",
+    description:
+      "Fires once the full invoice amount has settled on-chain. Wire it to $order->payment_complete($txHash) to flip the WooCommerce order to processing.",
+    payload: eventInvoicePaid,
+  },
+  {
+    type: "payment.received",
+    description:
+      "Fires for each on-chain transfer attributed to the invoice. Useful for short-pay handling — a single invoice can fire many of these.",
+    payload: eventPaymentReceived,
+  },
+  {
+    type: "invoice.expired",
+    description:
+      "Fires when an invoice passes its TTL without settlement. Cancel the WC order or mark the payment attempt failed.",
+    payload: eventInvoiceExpired,
+  },
+  {
+    type: "webhook.test",
+    description:
+      "Sent from the BlockPay dashboard when you click Send test event. Use it to confirm the endpoint and signature secret before you trust live events.",
+    payload: eventWebhookTest,
+  },
+];
+
+type Section = {
+  id: string;
   title: string;
-  body: React.ReactNode;
-  caption: string;
 };
 
-const steps: Step[] = [
-  {
-    n: 1,
-    title: "Download the BlockPay WooCommerce plugin",
-    body: (
-      <>
-        Grab the latest <InlineCode>blockpay.zip</InlineCode> from{" "}
-        <Link
-          href="/plugins/woocommerce"
-          className="text-accent underline-offset-4 hover:underline"
-        >
-          /plugins/woocommerce
-        </Link>
-        . The download page lists the current version and a changelog.
-      </>
-    ),
-    caption: "Plugin download page",
-  },
-  {
-    n: 2,
-    title: "Upload it via WordPress admin",
-    body: (
-      <>
-        In your WordPress admin, go to{" "}
-        <InlineCode>Plugins → Add New → Upload Plugin</InlineCode>. Choose the{" "}
-        <InlineCode>blockpay.zip</InlineCode> file and click Install Now.
-      </>
-    ),
-    caption: "Upload Plugin screen",
-  },
-  {
-    n: 3,
-    title: "Activate the plugin",
-    body: (
-      <>
-        After upload, click Activate. BlockPay registers itself as a
-        WooCommerce payment gateway — no further plugin install required.
-      </>
-    ),
-    caption: "Plugin list",
-  },
-  {
-    n: 4,
-    title: "Open the BlockPay settings",
-    body: (
-      <>
-        Navigate to{" "}
-        <InlineCode>
-          WooCommerce → Settings → Payments → BlockPay
-        </InlineCode>
-        . You will see the gateway configuration form.
-      </>
-    ),
-    caption: "Payments tab",
-  },
-  {
-    n: 5,
-    title: "Enter your settlement wallet and chain",
-    body: (
-      <>
-        Paste your settlement wallet address — this is where USDC will land.
-        Pick your preferred settlement chain (Arc or Base). Optionally set a
-        display name customers see at checkout.
-      </>
-    ),
-    caption: "Settings form",
-  },
-  {
-    n: 6,
-    title: "Save changes",
-    body: (
-      <>
-        Click Save changes. BlockPay is now a live payment method in your
-        store. Place a test order to confirm the checkout flow end-to-end.
-      </>
-    ),
-    caption: "Saved confirmation",
-  },
+const sections: Section[] = [
+  { id: "plugin", title: "Plugin" },
+  { id: "custom-gateway", title: "Custom gateway" },
+  { id: "standalone", title: "Standalone" },
+  { id: "events", title: "Webhook events" },
 ];
 
 export default function WordPressPage() {
   return (
-    <>
+    <PaletteScope>
       <Nav active="Docs" />
       <main>
         <section className="relative overflow-hidden">
           <div className="absolute inset-0 bg-grid bg-grid-fade" aria-hidden="true" />
-          <div className="absolute inset-x-0 top-0 h-[600px] bg-[radial-gradient(ellipse_at_top,rgba(74,222,128,0.08),transparent_70%)]" />
+          <div className="absolute inset-x-0 top-0 h-[600px] bg-[radial-gradient(ellipse_at_top,color-mix(in_srgb,var(--accent)_8%,transparent),transparent_70%)]" />
           <div className="relative mx-auto max-w-5xl px-8 py-24">
-            <span className="inline-flex items-center gap-2 rounded-full border border-[rgba(74,222,128,0.35)] bg-[rgba(74,222,128,0.06)] px-3 py-1 text-xs font-medium uppercase tracking-[0.18em] text-accent">
+            <span className="inline-flex items-center gap-2 rounded-full border border-[var(--border-strong)] bg-[var(--bg-elev)] px-3 py-1 text-xs font-medium uppercase tracking-[0.18em] text-fg-muted">
               <Boxes size={12} strokeWidth={2.4} />
               WordPress / WooCommerce
             </span>
-            <h1 className="mt-6 font-display text-5xl font-bold leading-[1.05] tracking-tight md:text-6xl">
-              Add <span className="text-accent">USDC checkout</span> to your
-              WooCommerce store.
+            <h1
+              className="mt-6 font-display text-5xl font-bold leading-[1.05] text-fg md:text-6xl"
+              style={{ letterSpacing: "-0.02em" }}
+            >
+              <span className="text-accent">WordPress</span> integration.
             </h1>
-            <p className="mt-7 max-w-2xl text-zinc-300">
-              Six steps from a zip file to a live USDC payment method.
-              BlockPay plugs straight into the standard WooCommerce gateway
-              flow.
+            <p className="mt-7 max-w-2xl text-fg-muted">
+              Three paths in. Drop the official plugin into WooCommerce, build
+              a custom <InlineCode>WC_Payment_Gateway</InlineCode> on top of
+              the SDK, or use the BlockPay PHP client on a non-WooCommerce
+              site.
             </p>
 
-            <div className="mt-16 space-y-12">
-              {steps.map((s) => (
-                <StepRow key={s.n} step={s} />
+            <nav className="mt-12 flex flex-wrap gap-2 text-sm">
+              {sections.map((s) => (
+                <a key={s.id} href={`#${s.id}`} className="btn-pill">
+                  {s.title}
+                  <ChevronRight size={14} strokeWidth={2.4} />
+                </a>
               ))}
+            </nav>
+
+            <div className="mt-20 space-y-16">
+              <Block
+                id="plugin"
+                eyebrow="Option A"
+                title="Official WooCommerce plugin"
+                subtitle="No code, ~5 minutes from download to a live USDC payment method."
+              >
+                <p className="text-fg-muted">
+                  The official plugin is a standard WooCommerce gateway. You
+                  download a zip, upload it through the WordPress admin, and
+                  configure four fields. The plugin handles invoice creation,
+                  webhook verification and order status transitions for you.
+                </p>
+
+                <Subhead>1. Download the plugin</Subhead>
+                <p className="mt-3 text-fg-muted">
+                  Grab the latest{" "}
+                  <InlineCode>blockpay.zip</InlineCode> from{" "}
+                  <Link
+                    href="/plugins/woocommerce"
+                    className="text-accent underline-offset-4 hover:underline"
+                  >
+                    /plugins/woocommerce
+                  </Link>
+                  . That page lists the current version and a changelog.
+                </p>
+
+                <Subhead>2. Upload via WP-admin</Subhead>
+                <p className="mt-3 text-fg-muted">
+                  In your WordPress admin, go to{" "}
+                  <InlineCode>
+                    Plugins → Add New → Upload Plugin
+                  </InlineCode>
+                  , pick the zip, click Install Now, then Activate.
+                </p>
+
+                <Subhead>3. Configure four fields</Subhead>
+                <p className="mt-3 text-fg-muted">
+                  Open{" "}
+                  <InlineCode>
+                    WooCommerce → Settings → Payments → BlockPay
+                  </InlineCode>{" "}
+                  and fill in the form. The four fields the plugin asks for:
+                </p>
+                <div className="mt-6 grid gap-4 md:grid-cols-2">
+                  {pluginSettings.map((s) => (
+                    <SettingCard key={s.name} setting={s} />
+                  ))}
+                </div>
+              </Block>
+
+              <Block
+                id="custom-gateway"
+                eyebrow="Option B"
+                title="Custom WooCommerce gateway"
+                subtitle="Build your own gateway on top of blockpay/woocommerce when the stock plugin is not enough."
+              >
+                <p className="text-fg-muted">
+                  When you need bespoke behaviour — different display logic
+                  per product type, custom fees, a fork-of-WooCommerce
+                  flavour — install the SDK and subclass{" "}
+                  <InlineCode>WC_Payment_Gateway</InlineCode> yourself. The
+                  SDK ships the API client and a small helpers module that
+                  maps a <InlineCode>WC_Order</InlineCode> to the input shape{" "}
+                  <InlineCode>createInvoice</InlineCode> expects.
+                </p>
+
+                <Subhead>Install</Subhead>
+                <CodeBlock code={composerInstall} label="bash" lang="bash" />
+
+                <Subhead>The gateway class</Subhead>
+                <p className="mt-3 text-fg-muted">
+                  A minimum-viable gateway is about 25 lines. The SDK&apos;s{" "}
+                  <InlineCode>WooHelpers::orderToInvoiceInput</InlineCode>{" "}
+                  flattens line items, taxes and shipping into the BlockPay
+                  invoice schema so you do not have to.
+                </p>
+                <CodeBlock
+                  code={customGatewayCode}
+                  label="class-wc-mycustom-blockpay.php"
+                  lang="php"
+                />
+
+                <Subhead>Webhook handler</Subhead>
+                <p className="mt-3 text-fg-muted">
+                  Register a single REST route to receive every BlockPay event
+                  and dispatch from there. The SDK&apos;s{" "}
+                  <InlineCode>Webhooks::verify</InlineCode> uses constant-time
+                  HMAC comparison.
+                </p>
+                <CodeBlock
+                  code={webhookHandlerCode}
+                  label="blockpay-webhooks.php"
+                  lang="php"
+                />
+              </Block>
+
+              <Block
+                id="standalone"
+                eyebrow="Option C"
+                title="Standalone WordPress"
+                subtitle="WooCommerce not in the picture? Use the PHP client directly."
+              >
+                <p className="text-fg-muted">
+                  Plenty of WordPress sites do not run WooCommerce — a
+                  donation form, a paywall on a Substack-style blog, a
+                  membership site on a different framework. The SDK&apos;s{" "}
+                  <InlineCode>Client</InlineCode> talks to the BlockPay API
+                  directly without any of the WooCommerce surface.
+                </p>
+
+                <Subhead>Install</Subhead>
+                <CodeBlock code={composerInstall} label="bash" lang="bash" />
+
+                <Subhead>A donation shortcode</Subhead>
+                <p className="mt-3 text-fg-muted">
+                  The snippet below registers a{" "}
+                  <InlineCode>[blockpay_donate amount=&quot;25&quot;]</InlineCode>{" "}
+                  shortcode that mints an invoice on render and outputs an
+                  anchor to the hosted checkout. Drop it in any post, page or
+                  widget.
+                </p>
+                <CodeBlock
+                  code={standaloneShortcodeCode}
+                  label="blockpay-donate.php"
+                  lang="php"
+                />
+              </Block>
+
+              <Block
+                id="events"
+                eyebrow="Reference"
+                title="Webhook events"
+                subtitle="Every event BlockPay can send to your WordPress integration."
+              >
+                <p className="text-fg-muted">
+                  Each event arrives as a JSON POST with an{" "}
+                  <InlineCode>X-BlockPay-Signature</InlineCode> header. If you
+                  are not using the SDK, this is the manual verification
+                  pattern:
+                </p>
+                <CodeBlock code={phpVerifyCode} label="verify.php" lang="php" />
+
+                <div className="mt-10 space-y-10">
+                  {events.map((e) => (
+                    <EventCard key={e.type} event={e} />
+                  ))}
+                </div>
+              </Block>
             </div>
 
-            <section
-              id="compatibility"
-              className="mt-20 card-frame p-8 md:p-12 scroll-mt-24"
-            >
-              <h2 className="font-display text-3xl font-semibold tracking-tight">
-                <span className="text-accent">Compatibility</span>
-              </h2>
-              <p className="mt-5 max-w-2xl text-zinc-400">
-                BlockPay works with WooCommerce 7.0+ and WordPress 6.0+. PHP
-                8.1 or newer is recommended. The plugin is tested on the most
-                recent two major versions of each — older versions may work
-                but are not actively supported.
-              </p>
-              <div className="mt-8 grid gap-4 md:grid-cols-3">
-                <Spec label="WooCommerce" value="7.0 or newer" />
-                <Spec label="WordPress" value="6.0 or newer" />
-                <Spec label="PHP" value="8.1 or newer" />
-              </div>
-            </section>
-
-            <div className="mt-16 flex flex-wrap gap-3">
-              <Link href="/docs/quick-start" className="btn-pill text-sm">
-                Back to quick start
+            <div className="mt-20 flex flex-wrap gap-3">
+              <Link href="/docs/sdk" className="btn-pill text-sm">
+                SDK reference
                 <ChevronRight size={14} strokeWidth={2.4} />
               </Link>
-              <Link href="/plugins/woocommerce" className="btn-pill text-sm">
-                Plugin download
+              <Link href="/docs/webhooks" className="btn-pill text-sm">
+                All webhook events
+                <ChevronRight size={14} strokeWidth={2.4} />
+              </Link>
+              <Link href="/docs/shopify" className="btn-pill text-sm">
+                Shopify integration
                 <ChevronRight size={14} strokeWidth={2.4} />
               </Link>
             </div>
@@ -159,126 +457,121 @@ export default function WordPressPage() {
         </section>
       </main>
       <Footer />
-    </>
+    </PaletteScope>
   );
 }
 
-function Spec({ label, value }: { label: string; value: string }) {
+function Block({
+  id,
+  eyebrow,
+  title,
+  subtitle,
+  children,
+}: {
+  id: string;
+  eyebrow: string;
+  title: string;
+  subtitle?: string;
+  children: React.ReactNode;
+}) {
   return (
-    <div className="card-frame-tight px-5 py-4">
-      <div className="font-display text-xs uppercase tracking-[0.18em] text-zinc-500">
-        {label}
-      </div>
-      <div className="mt-2 font-display text-lg font-semibold text-white">
-        {value}
-      </div>
-    </div>
+    <section id={id} className="scroll-mt-24">
+      <span className="font-display text-xs uppercase tracking-[0.18em] text-accent">
+        {eyebrow}
+      </span>
+      <h2 className="mt-3 font-display text-3xl font-semibold tracking-tight text-fg md:text-4xl">
+        {title}
+      </h2>
+      {subtitle ? (
+        <p className="mt-3 text-fg-muted">{subtitle}</p>
+      ) : null}
+      <div className="mt-8">{children}</div>
+    </section>
   );
 }
 
-function StepRow({ step }: { step: Step }) {
+function Subhead({ children }: { children: React.ReactNode }) {
   return (
-    <div
-      id={`step-${step.n}`}
-      className="grid items-start gap-8 md:grid-cols-[1fr_1.1fr] scroll-mt-24"
-    >
-      <div>
-        <div className="flex items-center gap-3">
-          <span
-            className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-[rgba(74,222,128,0.35)] bg-[rgba(74,222,128,0.06)] font-display text-sm font-semibold text-accent"
-            aria-hidden="true"
-          >
-            {step.n}
-          </span>
-          <span className="font-display text-xs uppercase tracking-[0.18em] text-zinc-500">
-            Step {step.n}
-          </span>
-        </div>
-        <h2
-          id={`s-${step.n}`}
-          className="mt-4 font-display text-2xl font-semibold tracking-tight md:text-3xl"
-        >
-          {step.title}
-        </h2>
-        <p className="mt-4 text-zinc-400">{step.body}</p>
-      </div>
-      <ScreenshotPlaceholder caption={step.caption} />
-    </div>
+    <h3 className="mt-10 font-display text-lg font-semibold text-fg">
+      {children}
+    </h3>
   );
 }
 
 function InlineCode({ children }: { children: React.ReactNode }) {
   return (
-    <code className="rounded bg-white/5 px-1.5 py-0.5 font-mono text-[13px] text-zinc-300">
+    <code className="rounded bg-[var(--bg-elev)] px-1.5 py-0.5 font-mono text-[13px] text-fg">
       {children}
     </code>
   );
 }
 
-function ScreenshotPlaceholder({ caption }: { caption: string }) {
+function SettingCard({
+  setting,
+}: {
+  setting: { name: string; description: string };
+}) {
   return (
-    <figure className="card-frame-tight overflow-hidden p-0">
-      <svg
-        viewBox="0 0 640 360"
-        role="img"
-        aria-label={`Screenshot placeholder — ${caption}`}
-        className="block h-auto w-full"
-      >
-        <defs>
-          <linearGradient id="wp-grad" x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0%" stopColor="#0c1310" />
-            <stop offset="100%" stopColor="#111a14" />
-          </linearGradient>
-          <pattern
-            id="wp-grid"
-            width="32"
-            height="32"
-            patternUnits="userSpaceOnUse"
-          >
-            <path
-              d="M 32 0 L 0 0 0 32"
-              fill="none"
-              stroke="rgba(74,222,128,0.08)"
-              strokeWidth="1"
-            />
-          </pattern>
-        </defs>
-        <rect width="640" height="360" fill="url(#wp-grad)" />
-        <rect width="640" height="360" fill="url(#wp-grid)" />
-        <rect
-          x="0.5"
-          y="0.5"
-          width="639"
-          height="359"
-          fill="none"
-          stroke="rgba(74,222,128,0.18)"
-        />
-        <rect x="0" y="0" width="160" height="360" fill="rgba(255,255,255,0.02)" />
-        <rect x="24" y="32" width="100" height="10" rx="2" fill="rgba(255,255,255,0.1)" />
-        <rect x="24" y="56" width="80" height="8" rx="2" fill="rgba(255,255,255,0.07)" />
-        <rect x="24" y="80" width="110" height="8" rx="2" fill="rgba(74,222,128,0.25)" />
-        <rect x="24" y="104" width="90" height="8" rx="2" fill="rgba(255,255,255,0.07)" />
-        <rect x="184" y="32" width="200" height="14" rx="3" fill="rgba(74,222,128,0.18)" />
-        <rect x="184" y="80" width="432" height="200" rx="10" fill="rgba(255,255,255,0.03)" stroke="rgba(74,222,128,0.18)" />
-        <rect x="204" y="108" width="160" height="10" rx="2" fill="rgba(255,255,255,0.12)" />
-        <rect x="204" y="130" width="392" height="10" rx="2" fill="rgba(255,255,255,0.08)" />
-        <rect x="204" y="160" width="280" height="32" rx="6" fill="rgba(255,255,255,0.04)" stroke="rgba(74,222,128,0.18)" />
-        <rect x="204" y="232" width="120" height="32" rx="16" fill="rgba(74,222,128,0.18)" stroke="rgba(74,222,128,0.35)" />
-        <text
-          x="320"
-          y="328"
-          textAnchor="middle"
-          fill="#71717a"
-          fontFamily="ui-monospace, SFMono-Regular, monospace"
-          fontSize="12"
-          letterSpacing="2"
-        >
-          SCREENSHOT
-        </text>
-      </svg>
-      <figcaption className="border-t border-[rgba(74,222,128,0.18)] px-5 py-3 font-mono text-xs uppercase tracking-[0.18em] text-zinc-500">
-        {caption}
-      </figcaption>
-    </figure>
+    <div className="card-frame-tight px-5 py-4">
+      <div className="font-display text-sm font-semibold text-fg">
+        {setting.name}
+      </div>
+      <p className="mt-2 text-sm text-fg-muted">{setting.description}</p>
+    </div>
+  );
+}
+
+function EventCard({ event }: { event: EventRow }) {
+  return (
+    <div className="card-frame-tight p-6">
+      <div className="flex flex-wrap items-baseline justify-between gap-3">
+        <code className="font-mono text-base text-accent">{event.type}</code>
+        <span className="font-display text-xs uppercase tracking-[0.18em] text-fg-subtle">
+          POST JSON
+        </span>
+      </div>
+      <p className="mt-3 text-fg-muted">{event.description}</p>
+      <CodeBlock code={event.payload} label="payload" lang="json" />
+    </div>
+  );
+}
+
+function CodeBlock({
+  code,
+  label,
+  lang,
+}: {
+  code: string;
+  label?: string;
+  lang?: string;
+}) {
+  const lines = code.split("\n");
+  return (
+    <div className="mt-4 overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--bg)]">
+      {label ? (
+        <div className="flex items-center justify-between border-b border-[var(--border)] px-5 py-3">
+          <span className="font-display text-xs uppercase tracking-[0.18em] text-fg-subtle">
+            {label}
+          </span>
+          {lang ? (
+            <span className="text-xs text-accent">{lang}</span>
+          ) : (
+            <span className="text-xs text-accent">blockpay/woocommerce</span>
+          )}
+        </div>
+      ) : null}
+      <pre className="overflow-x-auto p-5 font-mono text-sm leading-relaxed">
+        <code>
+          {lines.map((line, i) => (
+            <div key={i} className="flex gap-4">
+              <span className="select-none text-fg-subtle" aria-hidden="true">
+                {String(i + 1).padStart(2, "0")}
+              </span>
+              <span className="whitespace-pre text-fg">{line}</span>
+            </div>
+          ))}
+        </code>
+      </pre>
+    </div>
   );
 }

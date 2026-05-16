@@ -53,17 +53,17 @@ export function FeaturesSection() {
     <section className="px-8 py-24">
       <div className="mx-auto max-w-7xl">
         <div className="mx-auto max-w-2xl text-center">
-          <h2 className="font-display text-4xl font-bold tracking-tight md:text-5xl">
-            Key Features of <span className="text-accent">BlockPay</span>
+          <h2 className="font-display text-4xl font-bold tracking-tight text-fg md:text-5xl">
+            Key Features of BlockPay
           </h2>
-          <p className="mt-5 text-zinc-400">
+          <p className="mt-5 text-fg-muted">
             BlockPay offers a range of powerful features designed to transform
             your payment experience in the Web3 era.
           </p>
         </div>
 
         <div className="relative mt-20">
-          <div className="absolute left-[2.25rem] top-2 bottom-2 w-[2px] bg-[linear-gradient(to_bottom,rgba(74,222,128,0.7)_50%,transparent_50%)] bg-[length:2px_8px] bg-repeat-y md:left-[3rem]" />
+          <div className="absolute left-[2.25rem] top-2 bottom-2 w-[2px] bg-[linear-gradient(to_bottom,var(--border-strong)_50%,transparent_50%)] bg-[length:2px_8px] bg-repeat-y md:left-[3rem]" />
 
           <div className="space-y-24">
             {features.map((f) => (
@@ -81,17 +81,17 @@ function FeatureRow({ feature }: { feature: Feature }) {
   return (
     <div className="relative grid items-center gap-10 pl-20 md:grid-cols-[1.1fr_1fr] md:pl-24">
       <span
-        className="absolute left-[1.5rem] top-1 h-5 w-5 rounded-full border-2 border-[#4ade80] bg-black md:left-[2.25rem]"
+        className="absolute left-[1.5rem] top-1 h-5 w-5 rounded-full border-2 border-[var(--accent)] bg-[var(--bg)] md:left-[2.25rem]"
         aria-hidden="true"
       />
       <div>
         <div className="font-display text-base font-medium text-accent">
           {feature.num}
         </div>
-        <h3 className="mt-3 font-display text-2xl font-semibold leading-tight md:text-3xl">
+        <h3 className="mt-3 font-display text-2xl font-semibold leading-tight text-fg md:text-3xl">
           {feature.title}
         </h3>
-        <p className="mt-5 max-w-md text-zinc-400">{feature.body}</p>
+        <p className="mt-5 max-w-md text-fg-muted">{feature.body}</p>
         <div className="mt-7">
           <a href="/signup" className="btn-pill text-sm">
             Get Started Now

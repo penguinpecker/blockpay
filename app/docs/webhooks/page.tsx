@@ -2,6 +2,7 @@ import Link from "next/link";
 import { ChevronRight, Webhook } from "lucide-react";
 import { Nav } from "@/components/nav";
 import { Footer } from "@/components/footer";
+import { PaletteScope } from "@/components/palette-scope";
 
 export const metadata = {
   title: "Webhooks — BlockPay docs",
@@ -142,22 +143,25 @@ const events: EventDef[] = [
 
 export default function WebhooksDocsPage() {
   return (
-    <>
+    <PaletteScope>
       <Nav active="Docs" />
       <main>
         <section className="relative overflow-hidden">
           <div className="absolute inset-0 bg-grid bg-grid-fade" aria-hidden="true" />
-          <div className="absolute inset-x-0 top-0 h-[600px] bg-[radial-gradient(ellipse_at_top,rgba(74,222,128,0.08),transparent_70%)]" />
+          <div className="absolute inset-x-0 top-0 h-[600px] bg-[radial-gradient(ellipse_at_top,color-mix(in_srgb,var(--accent)_8%,transparent),transparent_70%)]" />
           <div className="relative mx-auto max-w-5xl px-8 py-24">
-            <span className="inline-flex items-center gap-2 rounded-full border border-[rgba(74,222,128,0.35)] bg-[rgba(74,222,128,0.06)] px-3 py-1 text-xs font-medium uppercase tracking-[0.18em] text-accent">
+            <span className="inline-flex items-center gap-2 rounded-full border border-[var(--border-strong)] bg-[var(--bg-elev)] px-3 py-1 text-xs font-medium uppercase tracking-[0.18em] text-fg-muted">
               <Webhook size={12} strokeWidth={2.4} />
               Webhooks
             </span>
-            <h1 className="mt-6 font-display text-5xl font-bold leading-[1.05] tracking-tight md:text-6xl">
+            <h1
+              className="mt-6 font-display text-5xl font-bold leading-[1.05] text-fg md:text-6xl"
+              style={{ letterSpacing: "-0.02em" }}
+            >
               Receive <span className="text-accent">signed events</span> when
               payments land.
             </h1>
-            <p className="mt-7 max-w-2xl text-zinc-300">
+            <p className="mt-7 max-w-2xl text-fg-muted">
               BlockPay posts every state change to your endpoint as a signed
               JSON event. Verify the HMAC signature, then trust the payload.
             </p>
@@ -189,7 +193,7 @@ export default function WebhooksDocsPage() {
               <h2 className="font-display text-3xl font-semibold tracking-tight md:text-4xl">
                 Overview
               </h2>
-              <p className="mt-4 max-w-2xl text-zinc-400">
+              <p className="mt-4 max-w-2xl text-fg-muted">
                 Configure a webhook URL per merchant in the BlockPay
                 dashboard. Every event hits that URL as an HTTP POST with a
                 JSON body and a signature header. Respond with any 2xx within
@@ -202,7 +206,7 @@ export default function WebhooksDocsPage() {
               <h2 className="font-display text-3xl font-semibold tracking-tight md:text-4xl">
                 Example payload
               </h2>
-              <p className="mt-4 max-w-2xl text-zinc-400">
+              <p className="mt-4 max-w-2xl text-fg-muted">
                 A typical <InlineCode>invoice.paid</InlineCode> event. Note
                 the <InlineCode>X-BlockPay-Signature</InlineCode> header
                 contains a timestamp and a v1 HMAC over{" "}
@@ -212,10 +216,10 @@ export default function WebhooksDocsPage() {
             </section>
 
             <section id="verify" className="mt-16 scroll-mt-24">
-              <h2 className="font-display text-3xl font-semibold tracking-tight md:text-4xl">
-                Verify the <span className="text-accent">signature</span>
+              <h2 className="font-display text-3xl font-semibold tracking-tight text-fg md:text-4xl">
+                Verify the signature
               </h2>
-              <p className="mt-4 max-w-2xl text-zinc-400">
+              <p className="mt-4 max-w-2xl text-fg-muted">
                 Always verify before doing anything with the payload. Use the
                 raw request body — re-serialised JSON will not match. Use
                 Node&apos;s <InlineCode>crypto.timingSafeEqual</InlineCode> to
@@ -224,7 +228,7 @@ export default function WebhooksDocsPage() {
               </p>
               <CodeBlock code={verifyNode} label="verify.ts" />
 
-              <h3 className="mt-12 font-display text-xl font-semibold text-white">
+              <h3 className="mt-12 font-display text-xl font-semibold text-fg">
                 Wire it into your route
               </h3>
               <CodeBlock code={routeExample} label="route.ts" />
@@ -234,20 +238,20 @@ export default function WebhooksDocsPage() {
               <h2 className="font-display text-3xl font-semibold tracking-tight md:text-4xl">
                 Event types
               </h2>
-              <p className="mt-4 max-w-2xl text-zinc-400">
+              <p className="mt-4 max-w-2xl text-fg-muted">
                 Five event types cover the full lifecycle. All events share
                 the same envelope; only the <InlineCode>data</InlineCode>{" "}
                 shape changes per type.
               </p>
 
-              <div className="mt-8 overflow-hidden rounded-2xl border border-[rgba(74,222,128,0.18)]">
+              <div className="mt-8 overflow-hidden rounded-2xl border border-[var(--border)]">
                 <table className="w-full text-left text-sm">
                   <thead>
-                    <tr className="border-b border-[rgba(74,222,128,0.18)] bg-[rgba(74,222,128,0.04)]">
-                      <th className="px-5 py-3 font-display text-xs font-semibold uppercase tracking-[0.18em] text-zinc-500">
+                    <tr className="border-b border-[var(--border)] bg-[var(--bg-elev)]">
+                      <th className="px-5 py-3 font-display text-xs font-semibold uppercase tracking-[0.18em] text-fg-subtle">
                         Event
                       </th>
-                      <th className="px-5 py-3 font-display text-xs font-semibold uppercase tracking-[0.18em] text-zinc-500">
+                      <th className="px-5 py-3 font-display text-xs font-semibold uppercase tracking-[0.18em] text-fg-subtle">
                         Description
                       </th>
                     </tr>
@@ -256,12 +260,12 @@ export default function WebhooksDocsPage() {
                     {events.map((e) => (
                       <tr
                         key={e.name}
-                        className="border-b border-[rgba(74,222,128,0.1)] last:border-b-0"
+                        className="border-b border-[var(--border)] last:border-b-0"
                       >
                         <td className="px-5 py-3 font-mono text-[13px] text-accent align-top whitespace-nowrap">
                           {e.name}
                         </td>
-                        <td className="px-5 py-3 text-zinc-300">
+                        <td className="px-5 py-3 text-fg">
                           {e.description}
                         </td>
                       </tr>
@@ -275,7 +279,7 @@ export default function WebhooksDocsPage() {
               <h2 className="font-display text-3xl font-semibold tracking-tight md:text-4xl">
                 Retries and idempotency
               </h2>
-              <p className="mt-4 max-w-2xl text-zinc-400">
+              <p className="mt-4 max-w-2xl text-fg-muted">
                 BlockPay considers the delivery successful only on a 2xx
                 response within five seconds. Other responses, timeouts and
                 connection errors trigger retries with exponential backoff
@@ -301,13 +305,13 @@ export default function WebhooksDocsPage() {
         </section>
       </main>
       <Footer />
-    </>
+    </PaletteScope>
   );
 }
 
 function InlineCode({ children }: { children: React.ReactNode }) {
   return (
-    <code className="rounded bg-white/5 px-1.5 py-0.5 font-mono text-[13px] text-zinc-300">
+    <code className="rounded bg-[var(--bg-elev)] px-1.5 py-0.5 font-mono text-[13px] text-fg">
       {children}
     </code>
   );
@@ -316,10 +320,10 @@ function InlineCode({ children }: { children: React.ReactNode }) {
 function CodeBlock({ code, label }: { code: string; label?: string }) {
   const lines = code.split("\n");
   return (
-    <div className="mt-6 overflow-hidden rounded-2xl border border-[rgba(74,222,128,0.18)] bg-black">
+    <div className="mt-6 overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--bg)]">
       {label ? (
-        <div className="flex items-center justify-between border-b border-[rgba(74,222,128,0.18)] px-5 py-3">
-          <span className="font-display text-xs uppercase tracking-[0.18em] text-zinc-500">
+        <div className="flex items-center justify-between border-b border-[var(--border)] px-5 py-3">
+          <span className="font-display text-xs uppercase tracking-[0.18em] text-fg-subtle">
             {label}
           </span>
           <span className="text-xs text-accent">BlockPay webhook</span>
@@ -329,10 +333,10 @@ function CodeBlock({ code, label }: { code: string; label?: string }) {
         <code>
           {lines.map((line, i) => (
             <div key={i} className="flex gap-4">
-              <span className="select-none text-zinc-600" aria-hidden="true">
+              <span className="select-none text-fg-subtle" aria-hidden="true">
                 {String(i + 1).padStart(2, "0")}
               </span>
-              <span className="whitespace-pre text-zinc-300">{line}</span>
+              <span className="whitespace-pre text-fg">{line}</span>
             </div>
           ))}
         </code>

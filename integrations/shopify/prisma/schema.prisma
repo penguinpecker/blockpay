@@ -1,0 +1,42 @@
+// BlockPay Shopify App — Prisma schema
+// Uses SQLite by default for local dev. Switch to Postgres for production
+// by changing the provider and DATABASE_URL.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:dev.sqlite"
+}
+
+// Required by @shopify/shopify-app-session-storage-prisma
+model Session {
+  id            String    @id
+  shop          String
+  state         String
+  isOnline      Boolean   @default(false)
+  scope         String?
+  expires       DateTime?
+  accessToken   String
+  userId        BigInt?
+  firstName     String?
+  lastName      String?
+  email         String?
+  accountOwner  Boolean   @default(false)
+  locale        String?
+  collaborator  Boolean?  @default(false)
+  emailVerified Boolean?  @default(false)
+}
+
+// Per-merchant BlockPay settlement configuration
+model MerchantSettings {
+  id                String   @id @default(cuid())
+  shop              String   @unique
+  settlementAddress String?
+  settlementChain   String   @default("arc-testnet")
+  merchantSlug      String?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+}

@@ -1,0 +1,6 @@
+/*
+ * BlockPay checkout CTA — optional external stylesheet referenced by
+ * checkout-cta.liquid via the schema `stylesheet` property. Inline styles in
+ * the liquid file already handle the base styling; this file is provided so
+ * theme editors can override without editing the block source.
+ */

@@ -35,10 +35,10 @@ export function FaqSection() {
     <section className="px-8 py-24">
       <div className="mx-auto max-w-5xl card-frame px-8 py-14 md:px-14">
         <div className="mx-auto max-w-2xl text-center">
-          <h2 className="font-display text-4xl font-bold tracking-tight md:text-5xl">
-            Why Choose <span className="text-accent">BlockPay?</span>
+          <h2 className="font-display text-4xl font-bold tracking-tight text-fg md:text-5xl">
+            Why Choose BlockPay?
           </h2>
-          <p className="mt-5 text-zinc-400">
+          <p className="mt-5 text-fg-muted">
             Offering a revolutionary alternative to traditional payment
             gateways. Below is a comprehensive comparison highlighting the
             advantages of choosing BlockPay over conventional options.
@@ -60,23 +60,27 @@ function FaqItem({ q, a }: { q: string; a: string }) {
   return (
     <button
       onClick={() => setOpen(!open)}
-      className="block w-full rounded-full border border-[rgba(74,222,128,0.2)] bg-[rgba(8,14,10,0.6)] px-7 py-5 text-left transition-colors hover:border-[rgba(74,222,128,0.45)]"
+      className={`block w-full border bg-[var(--bg-card)] px-7 py-5 text-left transition-colors ${
+        open
+          ? "border-[var(--border-active)]"
+          : "border-[var(--border)] hover:border-[var(--border-strong)]"
+      }`}
       aria-expanded={open}
       style={{
         borderRadius: open ? 24 : 999,
       }}
     >
       <div className="flex items-center justify-between gap-4">
-        <span className="text-base text-white">{q}</span>
+        <span className="text-base text-fg">{q}</span>
         <span
-          className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-[#4ade80] text-[#4ade80]"
+          className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-[var(--accent)] text-accent"
           aria-hidden="true"
         >
           {open ? <Minus size={14} strokeWidth={2.4} /> : <Plus size={14} strokeWidth={2.4} />}
         </span>
       </div>
       {open && (
-        <p className="mt-4 max-w-3xl text-sm text-zinc-400">{a}</p>
+        <p className="mt-4 max-w-3xl text-sm text-fg-muted">{a}</p>
       )}
     </button>
   );

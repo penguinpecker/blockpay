@@ -24,7 +24,7 @@ const FEATURES = [
 
 export default function EmbedPreviewPage() {
   return (
-    <>
+    <div className="palette-stealth">
       <Nav active="Solutions" />
       <main className="relative overflow-hidden">
         <div
@@ -32,24 +32,24 @@ export default function EmbedPreviewPage() {
           aria-hidden="true"
         />
         <div
-          className="absolute inset-x-0 top-0 h-[700px] bg-[radial-gradient(ellipse_at_top,rgba(74,222,128,0.08),transparent_70%)]"
+          className="absolute inset-x-0 top-0 h-[700px] bg-[radial-gradient(ellipse_at_top,color-mix(in_srgb,var(--accent)_8%,transparent),transparent_70%)]"
           aria-hidden="true"
         />
 
         <section className="relative mx-auto max-w-7xl px-8 pt-44 pb-24">
           <div className="grid items-start gap-14 lg:grid-cols-[1.05fr_1fr]">
             <div>
-              <div className="inline-flex items-center gap-2 rounded-full border border-[rgba(74,222,128,0.25)] bg-[rgba(74,222,128,0.06)] px-3 py-1 text-[11px] uppercase tracking-[0.2em] text-accent">
+              <div className="inline-flex items-center gap-2 rounded-full border border-[var(--border)] bg-white/[0.02] px-3 py-1 text-[11px] uppercase tracking-[0.2em] text-[var(--fg-muted)]">
                 Live preview
               </div>
-              <h1 className="mt-6 font-display text-5xl font-bold leading-[1.05] tracking-tight text-white md:text-6xl">
-                See <span className="text-accent">BlockPay</span>
+              <h1 className="mt-6 font-display text-5xl font-bold leading-[1.05] tracking-tight text-[var(--fg)] md:text-6xl">
+                See <span className="text-[var(--accent)]">BlockPay</span>
                 <br />
                 Checkout in
                 <br />
                 Action
               </h1>
-              <p className="mt-8 max-w-md text-base text-zinc-300">
+              <p className="mt-8 max-w-md text-base text-[var(--fg-muted)]">
                 The same widget your customers see at checkout — fully
                 interactive, no install required. Toggle tokens, swap chains,
                 and watch the gas-sponsored flow render in real time.
@@ -72,16 +72,16 @@ export default function EmbedPreviewPage() {
                   return (
                     <li key={f.title} className="flex items-start gap-4">
                       <div
-                        className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-[rgba(74,222,128,0.25)] bg-[rgba(74,222,128,0.08)]"
+                        className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-[var(--border)] bg-[var(--bg-elev)]"
                         aria-hidden="true"
                       >
-                        <Icon size={18} className="text-accent" />
+                        <Icon size={18} className="text-[var(--accent)]" />
                       </div>
                       <div>
-                        <h3 className="font-display text-base font-semibold text-white">
+                        <h3 className="font-display text-base font-semibold text-[var(--fg)]">
                           {f.title}
                         </h3>
-                        <p className="mt-1 text-sm text-zinc-400">{f.body}</p>
+                        <p className="mt-1 text-sm text-[var(--fg-muted)]">{f.body}</p>
                       </div>
                     </li>
                   );
@@ -90,12 +90,12 @@ export default function EmbedPreviewPage() {
             </div>
 
             <div className="relative flex items-start justify-center lg:justify-end">
-              <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(74,222,128,0.15),transparent_60%)] blur-2xl" />
+              <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,color-mix(in_srgb,var(--accent)_12%,transparent),transparent_60%)] blur-2xl" />
               <div className="relative w-full max-w-md">
-                <div className="mb-3 flex items-center justify-between text-[10px] uppercase tracking-[0.2em] text-zinc-500">
+                <div className="mb-3 flex items-center justify-between text-[10px] uppercase tracking-[0.2em] text-[var(--fg-subtle)]">
                   <span>blockpay.embed</span>
                   <span className="flex items-center gap-1.5">
-                    <span className="h-1.5 w-1.5 rounded-full bg-accent" />
+                    <span className="h-1.5 w-1.5 rounded-full bg-[var(--accent)]" />
                     Demo mode
                   </span>
                 </div>
@@ -110,6 +110,6 @@ export default function EmbedPreviewPage() {
         </section>
       </main>
       <Footer />
-    </>
+    </div>
   );
 }

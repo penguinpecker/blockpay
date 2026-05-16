@@ -2,6 +2,7 @@ import Link from "next/link";
 import { ChevronRight } from "lucide-react";
 import { Nav } from "@/components/nav";
 import { Footer } from "@/components/footer";
+import { PaletteScope } from "@/components/palette-scope";
 
 export const metadata = {
   title: "REST API reference — BlockPay docs",
@@ -203,20 +204,23 @@ const endpoints: EndpointDef[] = [
 
 export default function ApiPage() {
   return (
-    <>
+    <PaletteScope>
       <Nav active="Docs" />
       <main>
         <section className="relative overflow-hidden">
           <div className="absolute inset-0 bg-grid bg-grid-fade" aria-hidden="true" />
-          <div className="absolute inset-x-0 top-0 h-[600px] bg-[radial-gradient(ellipse_at_top,rgba(74,222,128,0.08),transparent_70%)]" />
+          <div className="absolute inset-x-0 top-0 h-[600px] bg-[radial-gradient(ellipse_at_top,color-mix(in_srgb,var(--accent)_8%,transparent),transparent_70%)]" />
           <div className="relative mx-auto max-w-5xl px-8 py-24">
-            <span className="inline-flex items-center rounded-full border border-[rgba(74,222,128,0.35)] bg-[rgba(74,222,128,0.06)] px-3 py-1 text-xs font-medium uppercase tracking-[0.18em] text-accent">
+            <span className="inline-flex items-center rounded-full border border-[var(--border-strong)] bg-[var(--bg-elev)] px-3 py-1 text-xs font-medium uppercase tracking-[0.18em] text-fg-muted">
               REST API
             </span>
-            <h1 className="mt-6 font-display text-5xl font-bold leading-[1.05] tracking-tight md:text-6xl">
+            <h1
+              className="mt-6 font-display text-5xl font-bold leading-[1.05] text-fg md:text-6xl"
+              style={{ letterSpacing: "-0.02em" }}
+            >
               The <span className="text-accent">BlockPay</span> REST API.
             </h1>
-            <p className="mt-7 max-w-2xl text-zinc-300">
+            <p className="mt-7 max-w-2xl text-fg-muted">
               All requests are JSON over HTTPS. Amounts are integer-string
               minor units (USDC has 6 decimals, so 4900000 is $4.90). Times
               are Unix seconds.
@@ -251,7 +255,7 @@ export default function ApiPage() {
         </section>
       </main>
       <Footer />
-    </>
+    </PaletteScope>
   );
 }
 
@@ -260,22 +264,22 @@ function Endpoint({ ep }: { ep: EndpointDef }) {
     <section id={ep.id} className="scroll-mt-24">
       <div className="flex flex-wrap items-center gap-3">
         <MethodTag method={ep.method} />
-        <code className="font-mono text-base text-zinc-200">{ep.path}</code>
+        <code className="font-mono text-base text-fg">{ep.path}</code>
       </div>
-      <h2 className="mt-5 font-display text-3xl font-semibold tracking-tight md:text-4xl">
+      <h2 className="mt-5 font-display text-3xl font-semibold tracking-tight text-fg md:text-4xl">
         {ep.title}
       </h2>
-      <p className="mt-4 max-w-2xl text-zinc-400">{ep.description}</p>
+      <p className="mt-4 max-w-2xl text-fg-muted">{ep.description}</p>
 
       <div className="mt-8 grid gap-6 md:grid-cols-2">
         <div>
-          <h3 className="font-display text-sm font-semibold uppercase tracking-[0.18em] text-zinc-500">
+          <h3 className="font-display text-sm font-semibold uppercase tracking-[0.18em] text-fg-subtle">
             Request
           </h3>
           <CodeBlock code={ep.request} />
         </div>
         <div>
-          <h3 className="font-display text-sm font-semibold uppercase tracking-[0.18em] text-zinc-500">
+          <h3 className="font-display text-sm font-semibold uppercase tracking-[0.18em] text-fg-subtle">
             Response
           </h3>
           <CodeBlock code={ep.response} />
@@ -283,17 +287,17 @@ function Endpoint({ ep }: { ep: EndpointDef }) {
       </div>
 
       <div className="mt-8">
-        <h3 className="font-display text-sm font-semibold uppercase tracking-[0.18em] text-zinc-500">
+        <h3 className="font-display text-sm font-semibold uppercase tracking-[0.18em] text-fg-subtle">
           Error codes
         </h3>
-        <div className="mt-4 overflow-hidden rounded-2xl border border-[rgba(74,222,128,0.18)]">
+        <div className="mt-4 overflow-hidden rounded-2xl border border-[var(--border)]">
           <table className="w-full text-left text-sm">
             <thead>
-              <tr className="border-b border-[rgba(74,222,128,0.18)] bg-[rgba(74,222,128,0.04)]">
-                <th className="px-5 py-3 font-display text-xs font-semibold uppercase tracking-[0.18em] text-zinc-500">
+              <tr className="border-b border-[var(--border)] bg-[var(--bg-elev)]">
+                <th className="px-5 py-3 font-display text-xs font-semibold uppercase tracking-[0.18em] text-fg-subtle">
                   Code
                 </th>
-                <th className="px-5 py-3 font-display text-xs font-semibold uppercase tracking-[0.18em] text-zinc-500">
+                <th className="px-5 py-3 font-display text-xs font-semibold uppercase tracking-[0.18em] text-fg-subtle">
                   Meaning
                 </th>
               </tr>
@@ -302,12 +306,12 @@ function Endpoint({ ep }: { ep: EndpointDef }) {
               {ep.errors.map((er) => (
                 <tr
                   key={er.code}
-                  className="border-b border-[rgba(74,222,128,0.1)] last:border-b-0"
+                  className="border-b border-[var(--border)] last:border-b-0"
                 >
                   <td className="px-5 py-3 font-mono text-[13px] text-accent">
                     {er.code}
                   </td>
-                  <td className="px-5 py-3 text-zinc-300">{er.meaning}</td>
+                  <td className="px-5 py-3 text-fg-muted">{er.meaning}</td>
                 </tr>
               ))}
             </tbody>
@@ -327,8 +331,8 @@ function MethodTag({
 }) {
   const palette =
     method === "POST"
-      ? "border-[rgba(74,222,128,0.45)] bg-[rgba(74,222,128,0.12)] text-accent"
-      : "border-[rgba(165,243,252,0.45)] bg-[rgba(165,243,252,0.08)] text-[#a5f3fc]";
+      ? "border-[var(--border-active)] bg-[var(--bg-elev)] text-accent"
+      : "border-[var(--border-strong)] bg-[var(--bg-elev)] text-[#a5f3fc]";
   return (
     <span
       className={`inline-flex items-center rounded-md border px-2 py-0.5 font-mono font-semibold tracking-wider ${palette} ${
@@ -343,15 +347,15 @@ function MethodTag({
 function CodeBlock({ code }: { code: string }) {
   const lines = code.split("\n");
   return (
-    <div className="mt-3 overflow-hidden rounded-2xl border border-[rgba(74,222,128,0.18)] bg-black">
+    <div className="mt-3 overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--bg)]">
       <pre className="overflow-x-auto p-5 font-mono text-sm leading-relaxed">
         <code>
           {lines.map((line, i) => (
             <div key={i} className="flex gap-4">
-              <span className="select-none text-zinc-600" aria-hidden="true">
+              <span className="select-none text-fg-subtle" aria-hidden="true">
                 {String(i + 1).padStart(2, "0")}
               </span>
-              <span className="whitespace-pre text-zinc-300">{line}</span>
+              <span className="whitespace-pre text-fg-muted">{line}</span>
             </div>
           ))}
         </code>

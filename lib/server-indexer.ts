@@ -9,9 +9,11 @@
  */
 
 import { parseEventLogs, type Log } from "viem";
+import type { Merchant } from "@prisma/client";
 import { CHAINS, type ChainKey, type ChainConfig } from "./contracts";
 import { ROUTER_ABI, publicClientFor } from "./web3";
 import { prisma } from "./prisma";
+import { deliverWebhook, type WebhookEvent } from "./server-webhooks";
 
 const DEFAULT_SCAN_WINDOW = BigInt(5000);
 const ZERO = BigInt(0);
@@ -71,6 +73,28 @@ async function resolveMerchantIdByAddress(
     },
   });
   return created.id;
+}
+
+/**
+ * Fire an outgoing webhook without blocking the indexer. Failures are
+ * logged but never propagated — webhook receivers must not be able to
+ * stall payment recording.
+ */
+function fireWebhook(
+  merchant: Merchant,
+  event: WebhookEvent,
+  data: unknown,
+): void {
+  void deliverWebhook({ merchant, event, data }).then((res) => {
+    if (!res.delivered && res.error) {
+      console.warn("[webhook] indexer delivery failed", {
+        merchantId: merchant.id,
+        event,
+        error: res.error,
+        status: res.status,
+      });
+    }
+  });
 }
 
 export async function indexChain(
@@ -206,6 +230,7 @@ export async function indexChain(
       skipped += 1;
     }
 
+    let invoiceFlippedToPaid = false;
     if (invoice && invoice.status !== "paid") {
       await prisma.invoice.update({
         where: { id: invoice.id },
@@ -214,6 +239,47 @@ export async function indexChain(
           paidAt: blockTimestamp,
         },
       });
+      invoiceFlippedToPaid = true;
+    }
+
+    // Outgoing webhooks (fire-and-forget). We only deliver when the
+    // payment row is newly recorded — replaying the same Settled event
+    // across indexer runs must be idempotent for the merchant too.
+    if (isNew) {
+      const merchant = await prisma.merchant.findFirst({
+        where: { settlementAddress: args.merchant.toLowerCase() },
+      });
+      if (merchant) {
+        fireWebhook(merchant, "payment.received", {
+          id: `${chainKey}:${txHash.toLowerCase()}:${logIndex}`,
+          invoiceId: invoice?.id ?? null,
+          onChainInvoiceId: args.invoiceId.toLowerCase(),
+          chainKey,
+          txHash: txHash.toLowerCase(),
+          logIndex,
+          payer: args.payer.toLowerCase(),
+          merchantAddress: args.merchant.toLowerCase(),
+          tokenAddress: args.token.toLowerCase(),
+          amount: args.amount.toString(),
+          feeAmount: args.feeAmount.toString(),
+          memoCid: args.memoCid.toLowerCase(),
+          blockNumber: blockNumber.toString(),
+          blockTimestamp: blockTimestamp.toISOString(),
+        });
+
+        if (invoiceFlippedToPaid && invoice) {
+          fireWebhook(merchant, "invoice.paid", {
+            id: invoice.id,
+            onChainInvoiceId: invoice.onChainInvoiceId,
+            merchantId: invoice.merchantId,
+            amount: invoice.amount,
+            currency: invoice.currency,
+            chainKey: invoice.chainKey,
+            paidAt: blockTimestamp.toISOString(),
+            txHash: txHash.toLowerCase(),
+          });
+        }
+      }
     }
   }
 

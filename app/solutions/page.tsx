@@ -2,6 +2,7 @@ import Link from "next/link";
 import { ChevronRight } from "lucide-react";
 import { Nav } from "@/components/nav";
 import { Footer } from "@/components/footer";
+import { PaletteScope } from "@/components/palette-scope";
 import {
   IlloLaptop,
   IlloReceipt,
@@ -89,22 +90,25 @@ const verticals: Vertical[] = [
 
 export default function SolutionsPage() {
   return (
-    <>
+    <PaletteScope>
       <Nav active="Solutions" />
       <main>
         <section className="relative overflow-hidden">
           <div className="absolute inset-0 bg-grid bg-grid-fade" aria-hidden="true" />
-          <div className="absolute inset-x-0 top-0 h-[640px] bg-[radial-gradient(ellipse_at_top,rgba(74,222,128,0.08),transparent_70%)]" />
+          <div className="absolute inset-x-0 top-0 h-[640px] bg-[radial-gradient(ellipse_at_top,color-mix(in_srgb,var(--accent)_8%,transparent),transparent_70%)]" />
           <div className="relative mx-auto max-w-7xl px-8 pt-40 pb-20">
             <div className="max-w-3xl">
-              <span className="inline-flex items-center rounded-full border border-[rgba(74,222,128,0.35)] bg-[rgba(74,222,128,0.06)] px-3 py-1 text-xs font-medium uppercase tracking-[0.18em] text-accent">
+              <span className="inline-flex items-center rounded-full border border-[var(--border-strong)] bg-[var(--bg-elev)] px-3 py-1 text-xs font-medium uppercase tracking-[0.18em] text-fg-muted">
                 Solutions
               </span>
-              <h1 className="mt-6 font-display text-5xl font-bold leading-[1.05] tracking-tight md:text-6xl">
+              <h1
+                className="mt-6 font-display text-5xl font-bold leading-[1.05] text-fg md:text-6xl"
+                style={{ letterSpacing: "-0.02em" }}
+              >
                 One payment rail, every{" "}
                 <span className="text-accent">selling surface</span>.
               </h1>
-              <p className="mt-7 max-w-2xl text-base text-zinc-300">
+              <p className="mt-7 max-w-2xl text-base text-fg-muted">
                 BlockPay slots into the storefront stack you already run. Pick
                 your surface — Shopify, WooCommerce, your own marketplace, a
                 SaaS billing flow, or an in-store tablet — and ship stablecoin
@@ -131,15 +135,15 @@ export default function SolutionsPage() {
                 <a
                   key={v.name}
                   href={`#${v.name.toLowerCase().replace(/\s+/g, "-")}`}
-                  className="card-frame-tight flex flex-col gap-2 px-5 py-5 transition-colors hover:border-[rgba(74,222,128,0.5)]"
+                  className="card-frame-tight flex flex-col gap-2 px-5 py-5 transition-colors hover:border-[var(--border-strong)]"
                 >
-                  <span className="text-xs uppercase tracking-[0.18em] text-zinc-500">
+                  <span className="text-xs uppercase tracking-[0.18em] text-fg-subtle">
                     {v.tag}
                   </span>
-                  <span className="font-display text-lg font-semibold text-white">
+                  <span className="font-display text-lg font-semibold text-fg">
                     {v.name}
                   </span>
-                  <span className="mt-auto inline-flex items-center gap-1 text-xs text-accent">
+                  <span className="mt-auto inline-flex items-center gap-1 text-xs text-fg-muted">
                     Jump to section
                     <ChevronRight size={12} strokeWidth={2.4} />
                   </span>
@@ -159,10 +163,10 @@ export default function SolutionsPage() {
 
         <section className="px-8 pb-28">
           <div className="mx-auto max-w-5xl card-frame px-10 py-14 text-center md:px-16">
-            <h3 className="font-display text-3xl font-bold tracking-tight md:text-4xl">
-              Don&apos;t see your <span className="text-accent">surface?</span>
+            <h3 className="font-display text-3xl font-bold tracking-tight text-fg md:text-4xl">
+              Don&apos;t see your surface?
             </h3>
-            <p className="mx-auto mt-5 max-w-xl text-zinc-400">
+            <p className="mx-auto mt-5 max-w-xl text-fg-muted">
               The BlockPay SDK is framework-agnostic. If you can render a button,
               you can take stablecoin payments. Tell us what you&apos;re building.
             </p>
@@ -180,7 +184,7 @@ export default function SolutionsPage() {
         </section>
       </main>
       <Footer />
-    </>
+    </PaletteScope>
   );
 }
 
@@ -193,18 +197,18 @@ function VerticalCard({ v, flipped }: { v: Vertical; flipped: boolean }) {
       className={`card-frame grid scroll-mt-32 items-center gap-10 p-8 md:grid-cols-[1.1fr_1fr] md:p-12 ${order}`}
     >
       <div>
-        <span className="inline-flex items-center rounded-full border border-[rgba(74,222,128,0.35)] bg-[rgba(74,222,128,0.06)] px-3 py-1 text-xs font-medium uppercase tracking-[0.18em] text-accent">
+        <span className="inline-flex items-center rounded-full border border-[var(--border-strong)] bg-[var(--bg-elev)] px-3 py-1 text-xs font-medium uppercase tracking-[0.18em] text-fg-muted">
           {v.tag}
         </span>
-        <h3 className="mt-5 font-display text-3xl font-semibold leading-tight md:text-4xl">
-          BlockPay for <span className="text-accent">{v.name}</span>.
+        <h3 className="mt-5 font-display text-3xl font-semibold leading-tight text-fg md:text-4xl">
+          BlockPay for {v.name}.
         </h3>
-        <p className="mt-5 max-w-md text-zinc-400">{v.pitch}</p>
+        <p className="mt-5 max-w-md text-fg-muted">{v.pitch}</p>
         <ul className="mt-7 space-y-3">
           {v.bullets.map((b) => (
-            <li key={b} className="flex items-start gap-3 text-sm text-zinc-300">
+            <li key={b} className="flex items-start gap-3 text-sm text-fg">
               <span
-                className="mt-[7px] inline-block h-[6px] w-[6px] shrink-0 rounded-full bg-[#4ade80]"
+                className="mt-[7px] inline-block h-[6px] w-[6px] shrink-0 rounded-full bg-[var(--accent)]"
                 aria-hidden="true"
               />
               {b}

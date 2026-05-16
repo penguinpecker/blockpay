@@ -1,5 +1,6 @@
 import { Nav } from "@/components/nav";
 import { Footer } from "@/components/footer";
+import { PaletteScope } from "@/components/palette-scope";
 
 type Status = "Operational" | "Degraded" | "Live";
 
@@ -37,20 +38,23 @@ const statusTextColor: Record<Status, string> = {
 
 export default function StatusPage() {
   return (
-    <>
+    <PaletteScope>
       <Nav active="Developers" />
       <main>
         <section className="relative overflow-hidden">
           <div className="absolute inset-0 bg-grid bg-grid-fade" aria-hidden="true" />
-          <div className="absolute inset-x-0 top-0 h-[640px] bg-[radial-gradient(ellipse_at_top,rgba(74,222,128,0.08),transparent_70%)]" />
+          <div className="absolute inset-x-0 top-0 h-[640px] bg-[radial-gradient(ellipse_at_top,color-mix(in_srgb,var(--accent)_8%,transparent),transparent_70%)]" />
           <div className="relative mx-auto max-w-7xl px-8 pt-40 pb-12 text-center">
-            <span className="inline-flex items-center rounded-full border border-[rgba(74,222,128,0.35)] bg-[rgba(74,222,128,0.06)] px-3 py-1 text-xs font-medium uppercase tracking-[0.18em] text-accent">
+            <span className="inline-flex items-center rounded-full border border-[var(--border-strong)] bg-[var(--bg-elev)] px-3 py-1 text-xs font-medium uppercase tracking-[0.18em] text-fg-muted">
               Status
             </span>
-            <h1 className="mx-auto mt-6 max-w-3xl font-display text-5xl font-bold leading-[1.05] tracking-tight md:text-6xl">
+            <h1
+              className="mx-auto mt-6 max-w-3xl font-display text-5xl font-bold leading-[1.05] text-fg md:text-6xl"
+              style={{ letterSpacing: "-0.02em" }}
+            >
               <span className="text-accent">System</span> status
             </h1>
-            <p className="mx-auto mt-7 max-w-2xl text-base text-zinc-300">
+            <p className="mx-auto mt-7 max-w-2xl text-base text-fg-muted">
               A live snapshot of BlockPay surfaces and infrastructure. Updated
               alongside deploys; full incident history coming soon.
             </p>
@@ -59,7 +63,7 @@ export default function StatusPage() {
 
         <section className="px-8 pb-16">
           <div className="mx-auto max-w-4xl card-frame px-8 py-10 md:px-12">
-            <ul className="divide-y divide-[rgba(74,222,128,0.12)]">
+            <ul className="divide-y divide-[var(--border)]">
               {rows.map((r) => (
                 <li
                   key={r.service}
@@ -71,11 +75,11 @@ export default function StatusPage() {
                       aria-hidden="true"
                     />
                     <div>
-                      <div className="font-display text-base font-semibold text-white">
+                      <div className="font-display text-base font-semibold text-fg">
                         {r.service}
                       </div>
                       {r.note && (
-                        <div className="mt-1 text-xs text-zinc-500">
+                        <div className="mt-1 text-xs text-fg-subtle">
                           {r.note}
                         </div>
                       )}
@@ -93,8 +97,8 @@ export default function StatusPage() {
         </section>
 
         <section className="px-8 pb-28">
-          <div className="mx-auto max-w-4xl card-frame-tight px-8 py-6 text-sm text-zinc-400">
-            <span className="font-display text-xs uppercase tracking-[0.16em] text-zinc-500">
+          <div className="mx-auto max-w-4xl card-frame-tight px-8 py-6 text-sm text-fg-muted">
+            <span className="font-display text-xs uppercase tracking-[0.16em] text-fg-subtle">
               Deployment addresses
             </span>
             <p className="mt-3 leading-relaxed">
@@ -108,6 +112,6 @@ export default function StatusPage() {
         </section>
       </main>
       <Footer />
-    </>
+    </PaletteScope>
   );
 }

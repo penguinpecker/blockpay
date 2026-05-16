@@ -1,0 +1,11 @@
+node_modules
+tests
+src
+tsconfig.json
+tsup.config.ts
+vitest.config.ts
+.gitignore
+.npmignore
+*.log
+*.tsbuildinfo
+.DS_Store

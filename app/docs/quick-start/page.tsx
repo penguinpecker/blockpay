@@ -2,6 +2,7 @@ import Link from "next/link";
 import { ChevronRight, ShoppingBag, Boxes, Code2 } from "lucide-react";
 import { Nav } from "@/components/nav";
 import { Footer } from "@/components/footer";
+import { PaletteScope } from "@/components/palette-scope";
 
 export const metadata = {
   title: "Quick start — BlockPay docs",
@@ -24,22 +25,25 @@ window.location.href = invoice.checkoutUrl;`;
 
 export default function QuickStartPage() {
   return (
-    <>
+    <PaletteScope>
       <Nav active="Docs" />
       <main>
         <section className="relative overflow-hidden">
           <div className="absolute inset-0 bg-grid bg-grid-fade" aria-hidden="true" />
-          <div className="absolute inset-x-0 top-0 h-[600px] bg-[radial-gradient(ellipse_at_top,rgba(74,222,128,0.08),transparent_70%)]" />
+          <div className="absolute inset-x-0 top-0 h-[600px] bg-[radial-gradient(ellipse_at_top,color-mix(in_srgb,var(--accent)_8%,transparent),transparent_70%)]" />
           <div className="relative mx-auto max-w-5xl px-8 py-24">
-            <span className="inline-flex items-center rounded-full border border-[rgba(74,222,128,0.35)] bg-[rgba(74,222,128,0.06)] px-3 py-1 text-xs font-medium uppercase tracking-[0.18em] text-accent">
+            <span className="inline-flex items-center rounded-full border border-[var(--border-strong)] bg-[var(--bg-elev)] px-3 py-1 text-xs font-medium uppercase tracking-[0.18em] text-fg-muted">
               Quick start
             </span>
-            <h1 className="mt-6 font-display text-5xl font-bold leading-[1.05] tracking-tight md:text-6xl">
+            <h1
+              className="mt-6 font-display text-5xl font-bold leading-[1.05] text-fg md:text-6xl"
+              style={{ letterSpacing: "-0.02em" }}
+            >
               Take your first{" "}
               <span className="text-accent">stablecoin payment</span> in five
               minutes.
             </h1>
-            <p className="mt-7 max-w-2xl text-base text-zinc-300">
+            <p className="mt-7 max-w-2xl text-base text-fg-muted">
               Pick the door that matches your stack. Each path ends with USDC
               landing in your settlement wallet on the chain you chose.
             </p>
@@ -81,12 +85,12 @@ export default function QuickStartPage() {
                     Full Shopify guide
                     <ChevronRight size={14} strokeWidth={2.4} />
                   </Link>
-                  <span className="rounded-full border border-[rgba(74,222,128,0.35)] bg-[rgba(74,222,128,0.06)] px-3 py-1 text-xs font-medium uppercase tracking-[0.18em] text-accent">
+                  <span className="rounded-full border border-[var(--border)] bg-[var(--bg-elev)] px-3 py-1 text-xs font-medium uppercase tracking-[0.18em] text-fg-muted">
                     Coming Soon
                   </span>
                   <Link
                     href="/signup"
-                    className="text-sm text-zinc-300 underline-offset-4 hover:text-white hover:underline"
+                    className="text-sm text-fg-muted underline-offset-4 hover:text-fg hover:underline"
                   >
                     Join the waitlist
                   </Link>
@@ -156,7 +160,7 @@ export default function QuickStartPage() {
         </section>
       </main>
       <Footer />
-    </>
+    </PaletteScope>
   );
 }
 
@@ -179,19 +183,19 @@ function Section({
     <section id={id} className="card-frame p-8 md:p-12 scroll-mt-24">
       <div className="flex items-start gap-4">
         <span
-          className="inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-[rgba(74,222,128,0.3)] bg-[rgba(74,222,128,0.08)] text-[#4ade80]"
+          className="inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-[var(--border)] bg-[var(--bg-elev)] text-accent"
           aria-hidden="true"
         >
           <Icon size={20} strokeWidth={2} />
         </span>
         <div>
-          <div className="font-display text-xs uppercase tracking-[0.18em] text-zinc-500">
+          <div className="font-display text-xs uppercase tracking-[0.18em] text-fg-subtle">
             {eyebrow}
           </div>
-          <h2 className="mt-1 font-display text-3xl font-semibold tracking-tight md:text-4xl">
+          <h2 className="mt-1 font-display text-3xl font-semibold tracking-tight text-fg md:text-4xl">
             {title}
           </h2>
-          <p className="mt-3 max-w-2xl text-zinc-400">{blurb}</p>
+          <p className="mt-3 max-w-2xl text-fg-muted">{blurb}</p>
         </div>
       </div>
       {children}
@@ -203,19 +207,19 @@ function Step({ n, children }: { n: number; children: React.ReactNode }) {
   return (
     <li className="flex items-start gap-4">
       <span
-        className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-[rgba(74,222,128,0.35)] bg-[rgba(74,222,128,0.06)] font-display text-sm font-semibold text-accent"
+        className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-[var(--border-strong)] bg-[var(--bg-elev)] font-display text-sm font-semibold text-accent"
         aria-hidden="true"
       >
         {n}
       </span>
-      <span className="pt-1 text-zinc-300">{children}</span>
+      <span className="pt-1 text-fg">{children}</span>
     </li>
   );
 }
 
 function InlineCode({ children }: { children: React.ReactNode }) {
   return (
-    <code className="rounded bg-white/5 px-1.5 py-0.5 font-mono text-[13px] text-zinc-300">
+    <code className="rounded bg-[var(--bg-elev)] px-1.5 py-0.5 font-mono text-[13px] text-fg-muted">
       {children}
     </code>
   );
@@ -224,10 +228,10 @@ function InlineCode({ children }: { children: React.ReactNode }) {
 function CodeBlock({ code, label }: { code: string; label?: string }) {
   const lines = code.split("\n");
   return (
-    <div className="mt-8 overflow-hidden rounded-2xl border border-[rgba(74,222,128,0.18)] bg-black">
+    <div className="mt-8 overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--bg)]">
       {label ? (
-        <div className="flex items-center justify-between border-b border-[rgba(74,222,128,0.18)] px-5 py-3">
-          <span className="font-display text-xs uppercase tracking-[0.18em] text-zinc-500">
+        <div className="flex items-center justify-between border-b border-[var(--border)] px-5 py-3">
+          <span className="font-display text-xs uppercase tracking-[0.18em] text-fg-subtle">
             {label}
           </span>
           <span className="text-xs text-accent">@blockpay/checkout</span>
@@ -237,10 +241,10 @@ function CodeBlock({ code, label }: { code: string; label?: string }) {
         <code>
           {lines.map((line, i) => (
             <div key={i} className="flex gap-4">
-              <span className="select-none text-zinc-600" aria-hidden="true">
+              <span className="select-none text-fg-subtle" aria-hidden="true">
                 {String(i + 1).padStart(2, "0")}
               </span>
-              <span className="whitespace-pre text-zinc-300">{line}</span>
+              <span className="whitespace-pre text-fg-muted">{line}</span>
             </div>
           ))}
         </code>

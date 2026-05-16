@@ -1,0 +1,29 @@
+node_modules
+.cache
+build
+dist
+.env
+.env.*
+!.env.example
+
+# Remix / Vite
+.vite
+public/build
+
+# Shopify CLI
+.shopify
+.shopify-cli.log
+
+# Prisma local DB
+prisma/dev.sqlite
+prisma/dev.sqlite-journal
+prisma/migrations/dev.db*
+
+# Editors
+.vscode
+.idea
+.DS_Store
+*.log
+
+# Generated
+.generated

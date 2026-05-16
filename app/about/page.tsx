@@ -2,27 +2,31 @@ import Link from "next/link";
 import { ChevronRight, ExternalLink } from "lucide-react";
 import { Nav } from "@/components/nav";
 import { Footer } from "@/components/footer";
+import { PaletteScope } from "@/components/palette-scope";
 
 export default function AboutPage() {
   return (
-    <>
+    <PaletteScope>
       <Nav active="Company" />
       <main>
         <section className="relative overflow-hidden">
           <div className="absolute inset-0 bg-grid bg-grid-fade" aria-hidden="true" />
-          <div className="absolute inset-x-0 top-0 h-[640px] bg-[radial-gradient(ellipse_at_top,rgba(74,222,128,0.08),transparent_70%)]" />
+          <div className="absolute inset-x-0 top-0 h-[640px] bg-[radial-gradient(ellipse_at_top,color-mix(in_srgb,var(--accent)_8%,transparent),transparent_70%)]" />
           <div className="relative mx-auto max-w-7xl px-8 pt-40 pb-12 text-center">
-            <span className="inline-flex items-center rounded-full border border-[rgba(74,222,128,0.35)] bg-[rgba(74,222,128,0.06)] px-3 py-1 text-xs font-medium uppercase tracking-[0.18em] text-accent">
+            <span className="inline-flex items-center rounded-full border border-[var(--border-strong)] bg-[var(--bg-elev)] px-3 py-1 text-xs font-medium uppercase tracking-[0.18em] text-fg-muted">
               About
             </span>
-            <h1 className="mx-auto mt-6 max-w-3xl font-display text-5xl font-bold leading-[1.05] tracking-tight md:text-6xl">
+            <h1
+              className="mx-auto mt-6 max-w-3xl font-display text-5xl font-bold leading-[1.05] text-fg md:text-6xl"
+              style={{ letterSpacing: "-0.02em" }}
+            >
               About <span className="text-accent">BlockPay</span>
             </h1>
           </div>
         </section>
 
         <section className="px-8 pb-20">
-          <div className="mx-auto max-w-3xl space-y-6 text-base leading-relaxed text-zinc-300">
+          <div className="mx-auto max-w-3xl space-y-6 text-base leading-relaxed text-fg-muted">
             <p>
               BlockPay is a non-custodial stablecoin commerce stack. Funds settle
               directly to the merchant&apos;s wallet on every payment — we never
@@ -54,17 +58,17 @@ export default function AboutPage() {
 
         <section className="px-8 pb-28">
           <div className="mx-auto max-w-3xl card-frame px-8 py-10 md:px-12">
-            <h2 className="font-display text-2xl font-semibold tracking-tight">
-              Live on the <span className="text-accent">internet</span>
+            <h2 className="font-display text-2xl font-semibold tracking-tight text-fg">
+              Live on the internet
             </h2>
-            <p className="mt-4 text-sm text-zinc-400">
+            <p className="mt-4 text-sm text-fg-muted">
               BlockPay is deployed and processing real testnet flows today. You
               can poke around, watch a checkout settle, and read the receipts
               on-chain.
             </p>
             <ul className="mt-6 space-y-3 text-sm">
               <li className="flex flex-wrap items-center gap-2">
-                <span className="text-zinc-500">Production:</span>
+                <span className="text-fg-subtle">Production:</span>
                 <a
                   href="https://blockpay-six.vercel.app"
                   target="_blank"
@@ -76,7 +80,7 @@ export default function AboutPage() {
                 </a>
               </li>
               <li className="flex flex-wrap items-center gap-2">
-                <span className="text-zinc-500">Sample transaction:</span>
+                <span className="text-fg-subtle">Sample transaction:</span>
                 <a
                   href="https://sepolia.basescan.org/address/0x50a2a3684F1df4db9A58C21febaf23D6b7DC8B2F"
                   target="_blank"
@@ -98,6 +102,6 @@ export default function AboutPage() {
         </section>
       </main>
       <Footer />
-    </>
+    </PaletteScope>
   );
 }

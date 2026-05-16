@@ -2,6 +2,7 @@ import Link from "next/link";
 import { ChevronRight, Share2, UserPlus, Coins } from "lucide-react";
 import { Nav } from "@/components/nav";
 import { Footer } from "@/components/footer";
+import { PaletteScope } from "@/components/palette-scope";
 
 type Step = {
   Icon: React.ComponentType<{ size?: number; strokeWidth?: number; className?: string }>;
@@ -33,21 +34,24 @@ const steps: Step[] = [
 
 export default function ReferralPage() {
   return (
-    <>
+    <PaletteScope>
       <Nav active="Resources" />
       <main>
         <section className="relative overflow-hidden">
           <div className="absolute inset-0 bg-grid bg-grid-fade" aria-hidden="true" />
-          <div className="absolute inset-x-0 top-0 h-[640px] bg-[radial-gradient(ellipse_at_top,rgba(74,222,128,0.08),transparent_70%)]" />
+          <div className="absolute inset-x-0 top-0 h-[640px] bg-[radial-gradient(ellipse_at_top,color-mix(in_srgb,var(--accent)_8%,transparent),transparent_70%)]" />
           <div className="relative mx-auto max-w-7xl px-8 pt-40 pb-12 text-center">
-            <span className="inline-flex items-center rounded-full border border-[rgba(74,222,128,0.35)] bg-[rgba(74,222,128,0.06)] px-3 py-1 text-xs font-medium uppercase tracking-[0.18em] text-accent">
+            <span className="inline-flex items-center rounded-full border border-[var(--border-strong)] bg-[var(--bg-elev)] px-3 py-1 text-xs font-medium uppercase tracking-[0.18em] text-fg-muted">
               Referral Program
             </span>
-            <h1 className="mx-auto mt-6 max-w-3xl font-display text-5xl font-bold leading-[1.05] tracking-tight md:text-6xl">
+            <h1
+              className="mx-auto mt-6 max-w-3xl font-display text-5xl font-bold leading-[1.05] text-fg md:text-6xl"
+              style={{ letterSpacing: "-0.02em" }}
+            >
               Refer a merchant,{" "}
               <span className="text-accent">earn USDC</span>
             </h1>
-            <p className="mx-auto mt-7 max-w-2xl text-base text-zinc-300">
+            <p className="mx-auto mt-7 max-w-2xl text-base text-fg-muted">
               Bring real merchants on-chain. We share fee revenue, paid in
               stablecoins, straight to your wallet.
             </p>
@@ -66,19 +70,19 @@ export default function ReferralPage() {
                   >
                     <div className="flex items-center justify-between">
                       <span
-                        className="inline-flex h-12 w-12 items-center justify-center rounded-xl border border-[rgba(74,222,128,0.3)] bg-[rgba(74,222,128,0.08)] text-[#4ade80]"
+                        className="inline-flex h-12 w-12 items-center justify-center rounded-xl border border-[var(--border)] bg-[var(--bg-elev)] text-accent"
                         aria-hidden="true"
                       >
                         <Icon size={20} strokeWidth={2} />
                       </span>
-                      <span className="font-mono text-xs uppercase tracking-[0.18em] text-zinc-500">
+                      <span className="font-mono text-xs uppercase tracking-[0.18em] text-fg-subtle">
                         {s.step}
                       </span>
                     </div>
-                    <h3 className="mt-6 font-display text-xl font-semibold text-white">
+                    <h3 className="mt-6 font-display text-xl font-semibold text-fg">
                       {s.title}
                     </h3>
-                    <p className="mt-3 text-sm leading-relaxed text-zinc-400">
+                    <p className="mt-3 text-sm leading-relaxed text-fg-muted">
                       {s.body}
                     </p>
                   </div>
@@ -90,10 +94,10 @@ export default function ReferralPage() {
 
         <section className="px-8 pb-28">
           <div className="mx-auto max-w-3xl card-frame px-10 py-12 text-center md:px-16">
-            <h2 className="font-display text-3xl font-bold tracking-tight md:text-4xl">
-              Ready to <span className="text-accent">share</span>?
+            <h2 className="font-display text-3xl font-bold tracking-tight text-fg md:text-4xl">
+              Ready to share?
             </h2>
-            <p className="mx-auto mt-4 max-w-xl text-sm text-zinc-400">
+            <p className="mx-auto mt-4 max-w-xl text-sm text-fg-muted">
               Sign up to grab your unique referral link from the dashboard.
             </p>
             <div className="mt-8">
@@ -106,6 +110,6 @@ export default function ReferralPage() {
         </section>
       </main>
       <Footer />
-    </>
+    </PaletteScope>
   );
 }

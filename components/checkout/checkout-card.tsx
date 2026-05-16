@@ -1,18 +1,18 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
-  ShieldCheck,
   Wallet,
   Zap,
   Loader2,
   CheckCircle2,
   ExternalLink,
   AlertTriangle,
+  ChevronDown,
 } from "lucide-react";
 import { ChainPills, type ChainId } from "./chain-pills";
-import { TokenSelect, type TokenId } from "./token-select";
-import { Receipt, type ReceiptLine } from "./receipt";
+import { TokenSelect, TokenDot, type TokenId } from "./token-select";
+import { Receipt, StepRail, type ReceiptLine, type Step } from "./receipt";
 import {
   ROUTER_ABI,
   ERC20_ABI,
@@ -51,6 +51,20 @@ const DEFAULT_LINES: ReceiptLine[] = [
 
 const DEMO_MERCHANT: Address = "0x93c984f976569bccEaDBB6e973E0f7d62A8aD217";
 
+const CHAIN_DOTS: Record<ChainId, string> = {
+  arc: "#4ade80",
+  base: "#3b82f6",
+  ethereum: "#a1a1aa",
+  solana: "#a855f7",
+};
+
+const CHAIN_LABELS: Record<ChainId, string> = {
+  arc: "Arc Testnet",
+  base: "Base Sepolia",
+  ethereum: "Ethereum",
+  solana: "Solana",
+};
+
 type Status =
   | { kind: "idle" }
   | { kind: "connecting" }
@@ -87,10 +101,54 @@ function gaslessStatusLabel(s: GaslessStatus): string {
 }
 
 function userOpExplorerFor(chainKey: "base-sepolia" | "arc-testnet", hash: Hex): string {
-  // Jiffyscan covers base-sepolia today; arc-testnet has no public AA
-  // explorer yet, so we fall back to the same network param.
   const network = chainKey === "base-sepolia" ? "base-sepolia" : "base-sepolia";
   return `https://www.jiffyscan.xyz/userOpHash/${hash}?network=${network}`;
+}
+
+/** Derive the 4-step rail from the wallet/tx status. */
+function stepsFor(status: Status, accountConnected: boolean): Step[] {
+  // Order: Pay → Submit → Confirm → Settled
+  // Pay = connect + token approval
+  // Submit = paying/gasless submitting
+  // Confirm = waiting receipt
+  // Settled = success
+  const future = (label: string): Step => ({ label, state: "future" });
+  const current = (label: string): Step => ({ label, state: "current" });
+  const complete = (label: string): Step => ({ label, state: "complete" });
+
+  if (status.kind === "success") {
+    return [
+      complete("Pay"),
+      complete("Submit"),
+      complete("Confirm"),
+      complete("Settled"),
+    ];
+  }
+  if (status.kind === "paying") {
+    return [complete("Pay"), complete("Submit"), current("Confirm"), future("Settled")];
+  }
+  if (status.kind === "gasless") {
+    const isSubmitting =
+      status.label === "Submitting…" ||
+      status.label === "Signing…" ||
+      status.label === "Funding test USDC…" ||
+      status.label === "Preparing account…";
+    if (isSubmitting) {
+      return [complete("Pay"), current("Submit"), future("Confirm"), future("Settled")];
+    }
+    // waiting-receipt
+    return [complete("Pay"), complete("Submit"), current("Confirm"), future("Settled")];
+  }
+  if (status.kind === "approving" || status.kind === "switching") {
+    return [current("Pay"), future("Submit"), future("Confirm"), future("Settled")];
+  }
+  if (status.kind === "connecting") {
+    return [current("Pay"), future("Submit"), future("Confirm"), future("Settled")];
+  }
+  if (accountConnected) {
+    return [current("Pay"), future("Submit"), future("Confirm"), future("Settled")];
+  }
+  return [current("Pay"), future("Submit"), future("Confirm"), future("Settled")];
 }
 
 export function CheckoutCard({
@@ -107,6 +165,8 @@ export function CheckoutCard({
   const [chain, setChain] = useState<ChainId>("base");
   const [account, setAccount] = useState<Address | null>(null);
   const [status, setStatus] = useState<Status>({ kind: "idle" });
+  const [showOther, setShowOther] = useState(false);
+  const [shimmerOnce, setShimmerOnce] = useState(false);
 
   useEffect(() => {
     if (!hasInjectedWallet()) return;
@@ -119,13 +179,27 @@ export function CheckoutCard({
     return () => eth.removeListener("accountsChanged", onAccounts);
   }, []);
 
+  // Trigger one-shot shimmer when entering "Confirm" or "Settled" steps.
+  useEffect(() => {
+    const enteringConfirm =
+      status.kind === "paying" ||
+      (status.kind === "gasless" && status.label === "Confirming on-chain…");
+    const enteringSettled = status.kind === "success";
+    if (enteringConfirm || enteringSettled) {
+      setShimmerOnce(true);
+      const t = setTimeout(() => setShimmerOnce(false), 720);
+      return () => clearTimeout(t);
+    }
+  }, [status]);
+
   const target = configForPill(chain as "arc" | "base" | "ethereum" | "solana");
   const isLive = target.status === "live-testnet" && target.chain !== null;
   const useGasless =
     isGaslessChainKey(target.chain?.key) && paymasterAvailable(target.chain.key);
 
+  const steps = useMemo(() => stepsFor(status, Boolean(account)), [status, account]);
+
   const handlePrimaryClick = async () => {
-    // External demo override
     if (onPay) {
       onPay();
       return;
@@ -174,15 +248,12 @@ export function CheckoutCard({
         return;
       }
 
-      // 1. Make sure wallet is on the target chain
       const currentChainId = await getChainId();
       if (currentChainId !== target.chain.chainId) {
         setStatus({ kind: "switching" });
         await ensureChain(target.chain);
       }
 
-      // 1a. Gasless ERC-4337 path via Circle Paymaster — only when the chain
-      //     has a bundler URL + Circle Paymaster v0.8 deployed.
       if (useGasless && isGaslessChainKey(target.chain.key)) {
         setStatus({ kind: "gasless", label: "Preparing account…" });
         const result = await payGasless({
@@ -211,7 +282,6 @@ export function CheckoutCard({
       const wallet = walletClient();
       const pub = publicClientFor(target.chain);
 
-      // 2. Ensure allowance >= amount (testnet: mint TestUSDC first if balance is 0)
       const balance = (await pub.readContract({
         address: tokenAddress,
         abi: ERC20_ABI,
@@ -220,7 +290,6 @@ export function CheckoutCard({
       })) as bigint;
 
       if (balance < amountUsdc && target.chain.testUsdc === tokenAddress) {
-        // Demo helper: mint enough TestUSDC so the visitor can pay.
         setStatus({ kind: "approving" });
         const mintHash = await wallet.writeContract({
           account,
@@ -253,7 +322,6 @@ export function CheckoutCard({
         await pub.waitForTransactionReceipt({ hash: approveHash });
       }
 
-      // 3. Call router.pay()
       setStatus({ kind: "paying" });
       const invoice = randomInvoiceId();
       const payHash = await wallet.writeContract({
@@ -283,7 +351,6 @@ export function CheckoutCard({
     } catch (err: unknown) {
       const e = err as { shortMessage?: string; message?: string };
       const msg = e?.shortMessage ?? e?.message ?? "Transaction failed";
-      // Strip RPC noise — first line only
       setStatus({ kind: "error", message: msg.split("\n")[0] });
     }
   };
@@ -335,13 +402,13 @@ export function CheckoutCard({
       return (
         <>
           <Wallet size={16} strokeWidth={2.4} />
-          Connect wallet
+          Connect
         </>
       );
     return (
       <>
         <Zap size={16} strokeWidth={2.4} />
-        {`Pay ${totalLabel}`}
+        <span className="tnum">{`Pay ${totalLabel}`}</span>
       </>
     );
   };
@@ -353,57 +420,131 @@ export function CheckoutCard({
     status.kind === "paying" ||
     status.kind === "gasless";
 
+  // Default recommended method = USDC on the currently configured chain.
+  const recommendedChain = target.chain?.name ?? CHAIN_LABELS[chain];
+
   return (
-    <div className="card-frame glow-accent w-full max-w-md p-6 md:p-7">
-      <div className="flex items-center justify-between gap-4 border-b border-white/5 pb-5">
+    <div className="card-frame card-active w-full max-w-md p-6 md:p-7">
+      {/* Merchant strip — plain fg, no green word treatment */}
+      <div className="flex items-center justify-between gap-4 border-b border-[var(--border)] pb-5">
         <div className="flex items-center gap-3">
           <div
-            className="flex h-9 w-9 items-center justify-center rounded-xl border border-[rgba(74,222,128,0.25)] bg-[rgba(74,222,128,0.08)] font-display text-sm font-bold text-accent"
+            className="flex h-9 w-9 items-center justify-center rounded-xl border border-[var(--border-strong)] bg-[var(--bg-elev)] font-display text-sm font-bold text-[var(--fg)]"
             aria-hidden="true"
           >
             {merchantName.charAt(0)}
           </div>
           <div>
-            <div className="font-display text-sm font-semibold text-white">
+            <div className="font-display text-sm font-semibold text-[var(--fg)]">
               {merchantName}
             </div>
-            <div className="text-[11px] text-zinc-500">
+            <div className="text-[11px] text-[var(--fg-subtle)]">
               {invoiceId ? `Invoice ${invoiceId}` : "Secure checkout"}
             </div>
           </div>
         </div>
-        <div className="flex items-center gap-1.5 text-[10px] uppercase tracking-wider text-zinc-500">
-          <ShieldCheck size={12} className="text-accent" aria-hidden="true" />
-          Secured
-        </div>
+        <button
+          type="button"
+          className="btn-pill text-[12px]"
+          onClick={() => {
+            if (!account && hasInjectedWallet()) {
+              handlePrimaryClick();
+            }
+          }}
+          aria-label={account ? "Wallet connected" : "Connect wallet"}
+        >
+          <Wallet size={14} strokeWidth={2.4} />
+          {account
+            ? `${account.slice(0, 6)}…${account.slice(-4)}`
+            : "Connect"}
+        </button>
       </div>
 
+      {/* Order summary */}
       <div className="mt-5">
         <Receipt lines={lineItems} />
       </div>
 
+      {/* Recommended payment method — hides chain pills + token select by default */}
       <div className="mt-5">
-        <TokenSelect value={token} onChange={setToken} />
-      </div>
-
-      <div className="mt-5">
-        <div className="mb-2 flex items-center justify-between text-[10px] uppercase tracking-[0.18em] text-zinc-500">
-          <span>Chain</span>
+        <div className="mb-2 flex items-center justify-between text-[10px] uppercase tracking-[0.18em] text-[var(--fg-subtle)]">
+          <span>Method</span>
           {isLive ? (
-            <span className="rounded-full border border-[rgba(74,222,128,0.3)] bg-[rgba(74,222,128,0.06)] px-2 py-[2px] text-[9px] normal-case tracking-normal text-accent">
+            <span className="rounded-full border border-[var(--border-active)] bg-[color-mix(in_srgb,var(--accent)_6%,transparent)] px-2 py-[2px] text-[9px] normal-case tracking-normal text-[var(--accent)]">
               Live testnet
             </span>
           ) : target.status === "coming-soon" ? (
-            <span className="text-[9px] normal-case tracking-normal text-amber-400">
+            <span className="text-[9px] normal-case tracking-normal text-[var(--warn)]">
               Coming soon
             </span>
           ) : (
-            <span className="text-[9px] normal-case tracking-normal text-zinc-500">
+            <span className="text-[9px] normal-case tracking-normal text-[var(--fg-subtle)]">
               Non-EVM
             </span>
           )}
         </div>
-        <ChainPills value={chain} onChange={setChain} />
+
+        <button
+          type="button"
+          onClick={() => setShowOther((v) => !v)}
+          className="flex w-full items-center gap-3 rounded-2xl border border-[var(--border-active)] bg-[color-mix(in_srgb,var(--accent)_5%,transparent)] px-4 py-3 text-left transition-colors hover:bg-[color-mix(in_srgb,var(--accent)_9%,transparent)]"
+          aria-expanded={showOther}
+        >
+          <TokenDot token={token} size={20} />
+          <div className="flex-1">
+            <div className="text-[10px] uppercase tracking-wider text-[var(--fg-subtle)]">
+              Pay with
+            </div>
+            <div className="flex items-center gap-2 text-sm font-medium text-[var(--fg)]">
+              <span className="tnum">{token}</span>
+              <span className="text-[var(--fg-subtle)]">on</span>
+              <span className="flex items-center gap-1.5">
+                <span
+                  className="h-1.5 w-1.5 rounded-full"
+                  style={{ background: CHAIN_DOTS[chain] }}
+                  aria-hidden="true"
+                />
+                {recommendedChain}
+              </span>
+            </div>
+          </div>
+          <ChevronDown
+            size={14}
+            className={`text-[var(--fg-subtle)] transition-transform duration-200 ${
+              showOther ? "rotate-180" : ""
+            }`}
+          />
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setShowOther((v) => !v)}
+          className="mt-2 text-[12px] text-[var(--fg-muted)] underline-offset-2 hover:text-[var(--fg)] hover:underline"
+          aria-expanded={showOther}
+        >
+          {showOther ? "Hide other ways to pay" : "Other ways to pay"}
+        </button>
+
+        <div
+          className="grid overflow-hidden transition-[grid-template-rows,opacity] duration-[240ms] ease-[cubic-bezier(0.22,1,0.36,1)]"
+          style={{
+            gridTemplateRows: showOther ? "1fr" : "0fr",
+            opacity: showOther ? 1 : 0,
+          }}
+          aria-hidden={!showOther}
+        >
+          <div className="min-h-0">
+            <div className="mt-3 space-y-3">
+              <TokenSelect value={token} onChange={setToken} />
+              <ChainPills value={chain} onChange={setChain} />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* 4-step horizontal rail */}
+      <div className="mt-5">
+        <StepRail steps={steps} shimmer={shimmerOnce} />
       </div>
 
       {status.kind === "success" && (
@@ -412,13 +553,13 @@ export function CheckoutCard({
             href={status.explorer}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center justify-between rounded-2xl border border-[rgba(74,222,128,0.4)] bg-[rgba(74,222,128,0.08)] px-4 py-3 text-xs"
+            className="flex items-center justify-between rounded-2xl border border-[var(--border-active)] bg-[color-mix(in_srgb,var(--accent)_6%,transparent)] px-4 py-3 text-xs"
           >
-            <span className="flex items-center gap-2 text-accent">
+            <span className="flex items-center gap-2 text-[var(--mint)]">
               <CheckCircle2 size={14} />
               Payment confirmed on-chain
             </span>
-            <span className="flex items-center gap-1 text-zinc-300">
+            <span className="flex items-center gap-1 text-[var(--fg)]">
               View tx <ExternalLink size={12} />
             </span>
           </a>
@@ -427,13 +568,18 @@ export function CheckoutCard({
               href={status.userOpExplorer}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center justify-between rounded-2xl border border-white/10 bg-white/[0.02] px-4 py-3 text-xs"
+              className="flex items-center justify-between rounded-2xl border border-[var(--border)] bg-white/[0.02] px-4 py-3 text-xs"
             >
-              <span className="flex items-center gap-2 text-zinc-300">
-                <Zap size={14} className="text-accent" />
-                UserOp {status.userOpHash.slice(0, 6)}…{status.userOpHash.slice(-4)}
+              <span className="flex items-center gap-2 text-[var(--fg)]">
+                <Zap size={14} className="text-[var(--accent)]" />
+                <span
+                  className="font-mono"
+                  title={status.userOpHash}
+                >
+                  UserOp {status.userOpHash.slice(0, 6)}…{status.userOpHash.slice(-4)}
+                </span>
               </span>
-              <span className="flex items-center gap-1 text-zinc-400">
+              <span className="flex items-center gap-1 text-[var(--fg-muted)]">
                 Jiffyscan <ExternalLink size={12} />
               </span>
             </a>
@@ -442,7 +588,7 @@ export function CheckoutCard({
       )}
 
       {status.kind === "error" && (
-        <div className="mt-5 flex items-start gap-2 rounded-2xl border border-amber-500/30 bg-amber-500/[0.06] px-4 py-3 text-xs text-amber-300">
+        <div className="mt-5 flex items-start gap-2 rounded-2xl border border-[color-mix(in_srgb,var(--warn)_30%,transparent)] bg-[color-mix(in_srgb,var(--warn)_6%,transparent)] px-4 py-3 text-xs text-[var(--warn)]">
           <AlertTriangle size={14} className="mt-[2px] shrink-0" />
           <span>{status.message}</span>
         </div>
@@ -458,13 +604,14 @@ export function CheckoutCard({
       </button>
 
       {target.chain?.router && (
-        <div className="mt-3 text-center text-[10px] text-zinc-600">
+        <div className="mt-3 text-center text-[10px] text-[var(--fg-subtle)]">
           Router:{" "}
           <a
             href={`${target.chain.explorerBase}/address/${target.chain.router}`}
             target="_blank"
             rel="noopener noreferrer"
-            className="text-zinc-400 underline-offset-2 hover:underline"
+            className="font-mono text-[var(--fg-muted)] underline-offset-2 hover:underline"
+            title={target.chain.router}
           >
             {target.chain.router.slice(0, 6)}…{target.chain.router.slice(-4)}
           </a>{" "}
@@ -472,14 +619,8 @@ export function CheckoutCard({
         </div>
       )}
 
-      <div className="mt-5 flex items-center justify-between border-t border-white/5 pt-4 text-[11px] text-zinc-500">
-        <span className="flex items-center gap-1.5">
-          <Zap size={12} className="text-accent" aria-hidden="true" />
-          Gas sponsored
-        </span>
-        <span>
-          Powered by <span className="text-accent">BlockPay</span>
-        </span>
+      <div className="mt-5 border-t border-[var(--border)] pt-4 text-center text-[11px] text-[var(--fg-subtle)]">
+        Powered by BlockPay
       </div>
     </div>
   );

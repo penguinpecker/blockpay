@@ -19,14 +19,17 @@ export function Hero() {
       <div className="relative mx-auto max-w-7xl px-8 pt-44 pb-32">
         <div className="grid items-center gap-12 lg:grid-cols-[1.05fr_1fr]">
           <div>
-            <h1 className="font-display text-5xl font-bold leading-[1.05] tracking-tight text-white md:text-6xl lg:text-7xl">
+            <h1
+              className="font-display text-5xl font-bold leading-[1.05] text-fg md:text-6xl lg:text-7xl"
+              style={{ letterSpacing: "-0.02em" }}
+            >
               Revolutionize Web3
               <br />
               Payments <span className="font-light">with</span>
               <br />
               <span className="text-accent">BlockPay</span>
             </h1>
-            <p className="mt-8 max-w-md text-base text-zinc-300">
+            <p className="mt-8 max-w-md text-base text-fg-muted">
               Simplify Transactions, Empower Decentralization.
             </p>
             <div className="mt-10">
@@ -40,7 +43,7 @@ export function Hero() {
               {partners.map((p) => (
                 <span
                   key={p.name}
-                  className={`text-zinc-400 ${p.style}`}
+                  className={`text-fg-muted ${p.style}`}
                   aria-hidden="true"
                 >
                   {p.name}

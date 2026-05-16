@@ -1,0 +1,40 @@
+# Shopify app configuration for BlockPay
+# Docs: https://shopify.dev/docs/apps/tools/cli/configuration
+
+name = "BlockPay"
+handle = "blockpay"
+client_id = ""
+application_url = "https://blockpay-six.vercel.app"
+embedded = true
+
+[build]
+automatically_update_urls_on_dev = true
+dev_store_url = ""
+include_config_on_deploy = true
+
+[webhooks]
+api_version = "2024-10"
+
+[[webhooks.subscriptions]]
+topics = ["app/uninstalled"]
+uri = "/webhooks/app/uninstalled"
+
+[[webhooks.subscriptions]]
+topics = ["app/scopes_update"]
+uri = "/webhooks/app/scopes_update"
+
+[access_scopes]
+# Minimum scopes for the v0 BlockPay integration:
+# - read_products lets the storefront extension reference product data
+# - write_orders is needed when v1 settles payments back to the order
+scopes = "read_products,write_orders"
+
+[auth]
+redirect_urls = [
+  "https://blockpay-six.vercel.app/auth/callback",
+  "https://blockpay-six.vercel.app/auth/shopify/callback",
+  "https://blockpay-six.vercel.app/api/auth/callback"
+]
+
+[pos]
+embedded = false

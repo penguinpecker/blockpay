@@ -7,12 +7,9 @@ import {
   CreditCard,
   FileText,
   Link2,
-  Repeat,
   Users,
   Banknote,
-  Undo2,
   Plug,
-  UserCog,
   Settings,
   type LucideIcon,
 } from "lucide-react";
@@ -30,12 +27,9 @@ const items: NavItem[] = [
   { label: "Payments", href: "/dashboard/payments", icon: CreditCard },
   { label: "Invoices", href: "/dashboard/invoices", icon: FileText },
   { label: "Payment links", href: "/dashboard/links", icon: Link2 },
-  { label: "Subscriptions", href: "/dashboard/subscriptions", icon: Repeat },
   { label: "Customers", href: "/dashboard/customers", icon: Users },
   { label: "Payouts", href: "/dashboard/payouts", icon: Banknote },
-  { label: "Refunds", href: "/dashboard/refunds", icon: Undo2 },
   { label: "Integrations", href: "/dashboard/integrations", icon: Plug },
-  { label: "Team", href: "/dashboard/team", icon: UserCog },
   { label: "Settings", href: "/dashboard/settings", icon: Settings },
 ];
 
@@ -49,8 +43,8 @@ export function Sidebar() {
   const accountAddress = "0x9F4c2B7d1a83e5C0eA8fE26b9D71aD3e514BcA37";
 
   return (
-    <aside className="hidden md:flex md:w-64 lg:w-72 flex-col border-r border-[rgba(74,222,128,0.18)] bg-[#0a0f0c]">
-      <div className="px-6 py-7 border-b border-[rgba(74,222,128,0.12)]">
+    <aside className="hidden md:flex md:w-60 flex-col border-r border-[var(--border)] bg-[var(--bg-panel)]">
+      <div className="px-5 py-6 border-b border-[var(--border)]">
         <Link href="/" aria-label="Blockpay home">
           <Logo />
         </Link>
@@ -69,16 +63,21 @@ export function Sidebar() {
                 <Link
                   href={item.href}
                   className={cn(
-                    "flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition-colors",
+                    "group flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-[13px] transition-colors",
                     isActive
-                      ? "bg-[rgba(74,222,128,0.10)] text-[#4ade80] border border-[rgba(74,222,128,0.25)]"
-                      : "text-zinc-400 hover:text-white hover:bg-white/[0.03] border border-transparent"
+                      ? "bg-[var(--bg-elev)] text-[var(--fg)]"
+                      : "text-[var(--fg-muted)] hover:text-[var(--fg)] hover:bg-[var(--bg-elev)]/60"
                   )}
                 >
                   <Icon
-                    size={17}
-                    strokeWidth={isActive ? 2.2 : 1.8}
-                    className={isActive ? "text-[#4ade80]" : "text-zinc-500"}
+                    size={16}
+                    strokeWidth={1.8}
+                    className={cn(
+                      "transition-colors",
+                      isActive
+                        ? "text-[var(--fg)]"
+                        : "text-[var(--fg-subtle)] group-hover:text-[var(--fg)]"
+                    )}
                   />
                   <span className="font-medium">{item.label}</span>
                 </Link>
@@ -88,16 +87,16 @@ export function Sidebar() {
         </ul>
       </nav>
 
-      <div className="border-t border-[rgba(74,222,128,0.12)] p-4">
-        <div className="flex items-center gap-3 rounded-xl border border-[rgba(74,222,128,0.18)] bg-[#0c1310] px-3 py-2.5">
-          <div className="grid h-9 w-9 place-items-center rounded-lg bg-gradient-to-br from-[#86efac] to-[#22c55e] font-display text-sm font-bold text-[#052e16]">
+      <div className="border-t border-[var(--border)] p-3">
+        <div className="flex items-center gap-2.5 rounded-lg border border-[var(--border)] bg-[var(--bg-card)] px-2.5 py-2">
+          <div className="grid h-8 w-8 place-items-center rounded-lg bg-gradient-to-br from-[var(--accent)] to-[var(--accent-glow)] font-display text-xs font-bold text-[var(--accent-deep)]">
             AS
           </div>
           <div className="min-w-0 flex-1">
-            <div className="truncate text-sm font-semibold text-white">
+            <div className="truncate text-xs font-semibold text-[var(--fg)]">
               Acme Storefront
             </div>
-            <div className="truncate font-mono text-xs text-zinc-500">
+            <div className="truncate font-mono text-[11px] text-[var(--fg-subtle)]">
               {truncateAddress(accountAddress)}
             </div>
           </div>

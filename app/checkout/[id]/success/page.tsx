@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { CheckCircle2, Download, ChevronRight } from "lucide-react";
-import { Receipt } from "@/components/checkout/receipt";
+import { Receipt, StepRail, type Step } from "@/components/checkout/receipt";
 
 const LINE_ITEMS = [
   { label: "Pro Plan – Monthly", amount: "$49.00" },
@@ -8,15 +8,20 @@ const LINE_ITEMS = [
   { label: "Total", amount: "$52.92", emphasis: true },
 ];
 
+const FULL_TX = "0x9c4f8be41eb7da27f0e54d33d9fbb31e7c0a91557a1e";
+const FULL_CID = "bafybeibhqxgw3p7jw2sw4xq2r4r34oxk5bcd6kek2q";
+
 const META = [
   {
     label: "Transaction",
-    value: "0x9c4f…7a1e",
+    value: `${FULL_TX.slice(0, 6)}…${FULL_TX.slice(-4)}`,
+    fullValue: FULL_TX,
     mono: true,
   },
   {
     label: "Receipt CID",
-    value: "bafyb…rk2q",
+    value: `${FULL_CID.slice(0, 6)}…${FULL_CID.slice(-4)}`,
+    fullValue: FULL_CID,
     mono: true,
   },
   {
@@ -29,6 +34,13 @@ const META = [
   },
 ];
 
+const COMPLETED_STEPS: Step[] = [
+  { label: "Pay", state: "complete" },
+  { label: "Submit", state: "complete" },
+  { label: "Confirm", state: "complete" },
+  { label: "Settled", state: "complete" },
+];
+
 export default async function SuccessPage({
   params,
 }: {
@@ -37,37 +49,41 @@ export default async function SuccessPage({
   const { id } = await params;
 
   return (
-    <main className="relative flex min-h-screen items-center justify-center overflow-hidden bg-black px-6 py-12">
+    <main className="palette-stealth relative flex min-h-screen items-center justify-center overflow-hidden bg-[var(--bg)] px-6 py-12">
       <div
         className="absolute inset-0 bg-grid bg-grid-fade"
         aria-hidden="true"
       />
       <div
-        className="absolute inset-x-0 top-0 h-[600px] bg-[radial-gradient(ellipse_at_top,rgba(74,222,128,0.12),transparent_70%)]"
+        className="absolute inset-x-0 top-0 h-[600px] bg-[radial-gradient(ellipse_at_top,color-mix(in_srgb,var(--accent)_12%,transparent),transparent_70%)]"
         aria-hidden="true"
       />
 
       <div className="relative w-full max-w-md">
-        <div className="card-frame glow-accent p-6 md:p-7">
+        <div className="card-frame card-active p-6 md:p-7">
           <div className="flex flex-col items-center text-center">
             <div
-              className="relative flex h-16 w-16 items-center justify-center rounded-full bg-[rgba(74,222,128,0.12)]"
+              className="relative flex h-16 w-16 items-center justify-center rounded-full bg-[color-mix(in_srgb,var(--mint)_12%,transparent)]"
               aria-hidden="true"
             >
-              <div className="absolute inset-0 rounded-full bg-[radial-gradient(circle,rgba(74,222,128,0.35),transparent_70%)] blur-md" />
+              <div className="absolute inset-0 rounded-full bg-[radial-gradient(circle,color-mix(in_srgb,var(--mint)_35%,transparent),transparent_70%)] blur-md" />
               <CheckCircle2
                 size={40}
                 strokeWidth={2}
-                className="relative text-accent"
+                className="relative text-[var(--mint)]"
               />
             </div>
-            <h1 className="mt-5 font-display text-2xl font-bold tracking-tight text-white md:text-3xl">
-              Payment <span className="text-accent">received</span>
+            <h1 className="mt-5 font-display text-2xl font-semibold tracking-tight text-[var(--fg)] md:text-3xl">
+              Payment received
             </h1>
-            <p className="mt-2 max-w-xs text-sm text-zinc-400">
+            <p className="mt-2 max-w-xs text-sm text-[var(--fg-muted)]">
               Invoice {id} settled on-chain. A signed receipt has been pinned to
               IPFS.
             </p>
+          </div>
+
+          <div className="mt-6">
+            <StepRail steps={COMPLETED_STEPS} />
           </div>
 
           <div className="mt-6">
@@ -91,8 +107,8 @@ export default async function SuccessPage({
             </Link>
           </div>
 
-          <div className="mt-5 border-t border-white/5 pt-4 text-center text-[11px] text-zinc-500">
-            Powered by <span className="text-accent">BlockPay</span>
+          <div className="mt-5 border-t border-[var(--border)] pt-4 text-center text-[11px] text-[var(--fg-subtle)]">
+            Powered by BlockPay
           </div>
         </div>
       </div>

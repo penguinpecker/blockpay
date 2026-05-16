@@ -1,0 +1,677 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>BlockPay v2 — Dashboard (Aurora palette)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --bg: #06080d;
+    --panel: #0a0e16;
+    --card: #0e131d;
+    --elev: #141a26;
+    --fg: #e7eaf2;
+    --fg-muted: #8a92a3;
+    --fg-subtle: #525968;
+    --accent: #3ee0a1;
+    --accent-glow: #7df5c4;
+    --accent-dim: #1f8a5e;
+    --border: rgba(231, 234, 242, 0.06);
+    --border-strong: rgba(231, 234, 242, 0.12);
+    --border-active: rgba(62, 224, 161, 0.45);
+    --c1: #3ee0a1;
+    --c2: #6aa6ff;
+    --c3: #c084fc;
+    --c4: #f59e0b;
+    --c5: #ef4444;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body {
+    background: var(--bg);
+    color: var(--fg);
+    font-family: 'Inter', ui-sans-serif, system-ui;
+    font-size: 14px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    min-height: 100vh;
+  }
+  .display { font-family: 'Space Grotesk', 'Inter', sans-serif; letter-spacing: -0.02em; }
+  .mono { font-family: 'JetBrains Mono', monospace; }
+  .tnum { font-variant-numeric: tabular-nums slashed-zero; }
+
+  .app { display: grid; grid-template-columns: 240px minmax(0,1fr); min-height: 100vh; }
+
+  /* SIDEBAR */
+  .sidebar {
+    background: var(--panel);
+    border-right: 1px solid var(--border);
+    padding: 22px 14px;
+    display: flex; flex-direction: column; gap: 18px;
+  }
+  .logo {
+    display: flex; align-items: center; gap: 10px;
+    padding: 6px 8px;
+  }
+  .logo-mark {
+    width: 24px; height: 24px; border-radius: 7px;
+    background: linear-gradient(135deg, var(--accent), var(--accent-glow));
+    display: grid; place-items: center;
+    color: #042418; font-weight: 700; font-size: 12px;
+  }
+  .logo-text { font-family: 'Space Grotesk'; font-weight: 500; font-size: 15px; letter-spacing: -0.01em; }
+  .env-switch {
+    display: flex; padding: 3px;
+    background: var(--elev); border: 1px solid var(--border);
+    border-radius: 8px;
+  }
+  .env-opt {
+    flex: 1; text-align: center; padding: 6px;
+    font-size: 12px; color: var(--fg-muted);
+    border-radius: 6px; cursor: pointer;
+    transition: all 160ms ease;
+  }
+  .env-opt.active {
+    background: rgba(62,224,161,0.12);
+    color: var(--accent);
+    box-shadow: inset 0 0 0 1px rgba(62,224,161,0.25);
+  }
+  .nav-section { display: flex; flex-direction: column; gap: 2px; }
+  .nav-label {
+    font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase;
+    color: var(--fg-subtle); padding: 12px 10px 6px;
+  }
+  .nav-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 7px 10px;
+    color: var(--fg-muted); font-size: 13.5px;
+    border-radius: 7px;
+    cursor: pointer;
+    transition: all 140ms ease;
+    text-decoration: none;
+  }
+  .nav-item:hover { color: var(--fg); background: rgba(255,255,255,0.025); }
+  .nav-item.active {
+    background: rgba(62,224,161,0.07);
+    color: var(--fg);
+    box-shadow: inset 0 0 0 1px rgba(62,224,161,0.15);
+  }
+  .nav-item.active .nav-icon { color: var(--accent); }
+  .nav-icon { width: 16px; height: 16px; flex-shrink: 0; color: var(--fg-subtle); }
+  .nav-badge {
+    margin-left: auto; font-size: 10px; padding: 1px 6px;
+    background: var(--elev); color: var(--fg-muted);
+    border-radius: 999px;
+    font-family: 'JetBrains Mono';
+  }
+  .sidebar-foot { margin-top: auto; padding: 8px 10px; display: flex; align-items: center; gap: 10px; border-top: 1px solid var(--border); padding-top: 14px; }
+  .avatar { width: 26px; height: 26px; border-radius: 50%; background: linear-gradient(135deg, var(--c2), var(--c3)); }
+  .user-meta { font-size: 13px; }
+  .user-meta small { color: var(--fg-subtle); display: block; font-size: 11px; }
+
+  /* MAIN */
+  .main { padding: 28px 36px; max-width: 1280px; }
+  .topbar {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 28px;
+  }
+  .topbar h1 { font-family: 'Space Grotesk'; font-weight: 500; font-size: 22px; letter-spacing: -0.02em; }
+  .topbar-meta { display: flex; gap: 10px; align-items: center; }
+  .kbd-trigger {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 6px 12px;
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--fg-muted); font-size: 13px;
+    cursor: pointer;
+    transition: all 160ms ease;
+  }
+  .kbd-trigger:hover { border-color: var(--border-strong); color: var(--fg); }
+  .kbd {
+    font-family: 'JetBrains Mono'; font-size: 11px;
+    padding: 2px 6px; background: var(--elev); border-radius: 4px;
+  }
+  .btn-primary {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 8px 14px;
+    background: var(--accent); color: #042418;
+    border: none; border-radius: 8px;
+    font-family: inherit; font-weight: 600; font-size: 13px;
+    cursor: pointer; transition: all 160ms ease;
+  }
+  .btn-primary:hover { background: var(--accent-glow); }
+
+  /* date selector */
+  .range-pills { display: flex; gap: 4px; padding: 3px; background: var(--card); border: 1px solid var(--border); border-radius: 9px; }
+  .range-pill { padding: 5px 10px; font-size: 12px; color: var(--fg-muted); border-radius: 6px; cursor: pointer; transition: all 140ms ease; }
+  .range-pill.active { background: var(--elev); color: var(--fg); }
+
+  /* STAT TILES */
+  .tiles {
+    display: grid; grid-template-columns: repeat(4, 1fr);
+    gap: 12px; margin-bottom: 28px;
+  }
+  .tile {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 18px 20px;
+    position: relative;
+    overflow: hidden;
+    transition: border-color 200ms ease;
+  }
+  .tile:hover { border-color: var(--border-strong); }
+  .tile-label {
+    font-size: 12px; color: var(--fg-muted);
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .tile-delta {
+    font-size: 11px;
+    padding: 2px 6px; border-radius: 999px;
+    font-family: 'JetBrains Mono';
+  }
+  .tile-delta.up { color: var(--accent); background: rgba(62,224,161,0.12); }
+  .tile-delta.down { color: var(--c5); background: rgba(239,68,68,0.12); }
+  .tile-value {
+    font-family: 'Space Grotesk'; font-weight: 500;
+    font-size: 36px; letter-spacing: -0.03em; margin-top: 12px;
+    line-height: 1.05;
+  }
+  .tile-currency { font-size: 16px; color: var(--fg-subtle); margin-right: 2px; vertical-align: 8px; }
+  .tile-cents { font-size: 20px; color: var(--fg-muted); }
+  .tile-spark { margin-top: 12px; height: 36px; }
+  .tile-spark path { vector-effect: non-scaling-stroke; }
+
+  /* CHART CARD */
+  .row-1 {
+    display: grid; grid-template-columns: 1.5fr 1fr;
+    gap: 12px; margin-bottom: 12px;
+  }
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 22px;
+  }
+  .card-head {
+    display: flex; justify-content: space-between; align-items: flex-start;
+    margin-bottom: 18px;
+  }
+  .card-title { font-family: 'Space Grotesk'; font-weight: 500; font-size: 15px; }
+  .card-sub { color: var(--fg-subtle); font-size: 12px; margin-top: 4px; }
+  .legend { display: flex; gap: 16px; font-size: 12px; }
+  .legend-item { display: inline-flex; align-items: center; gap: 6px; color: var(--fg-muted); }
+  .legend-dot { width: 8px; height: 2px; border-radius: 1px; }
+
+  .chart { width: 100%; height: 220px; }
+  .chart .grid-line { stroke: rgba(231,234,242,0.04); }
+  .chart .axis-label { fill: var(--fg-subtle); font-size: 10px; font-family: 'JetBrains Mono'; }
+  .chart .area-1 { fill: url(#g1); }
+  .chart .line-1 { stroke: var(--c1); stroke-width: 1.5; fill: none; vector-effect: non-scaling-stroke; }
+  .chart .line-2 { stroke: var(--c2); stroke-width: 1.5; fill: none; vector-effect: non-scaling-stroke; stroke-dasharray: 3 3; }
+  .chart .dot { fill: var(--c1); }
+
+  /* breakdown card */
+  .breakdown-row {
+    display: flex; align-items: center; gap: 12px;
+    padding: 12px 0; border-bottom: 1px solid var(--border);
+  }
+  .breakdown-row:last-child { border-bottom: none; }
+  .breakdown-name { font-size: 13px; }
+  .breakdown-name small { color: var(--fg-subtle); display: block; font-size: 11px; margin-top: 2px; }
+  .breakdown-bar {
+    flex: 1; height: 4px; background: var(--elev); border-radius: 2px;
+    overflow: hidden;
+    margin-left: 8px;
+  }
+  .breakdown-bar-fill { height: 100%; border-radius: 2px; transition: width 600ms cubic-bezier(0.22, 1, 0.36, 1); }
+  .breakdown-value { font-family: 'Space Grotesk'; font-weight: 500; font-size: 14px; min-width: 80px; text-align: right; }
+  .breakdown-pct { color: var(--fg-subtle); font-size: 11px; font-family: 'JetBrains Mono'; min-width: 42px; text-align: right; }
+
+  /* activity feed */
+  .feed-card { padding: 0; overflow: hidden; }
+  .feed-head {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 18px 22px;
+    border-bottom: 1px solid var(--border);
+  }
+  .feed-tabs { display: flex; gap: 18px; }
+  .feed-tab { font-size: 13px; color: var(--fg-muted); cursor: pointer; padding-bottom: 4px; border-bottom: 2px solid transparent; }
+  .feed-tab.active { color: var(--fg); border-bottom-color: var(--accent); }
+
+  .feed-row {
+    display: grid;
+    grid-template-columns: 32px 1fr auto auto auto;
+    gap: 14px;
+    align-items: center;
+    padding: 14px 22px;
+    border-bottom: 1px solid var(--border);
+    position: relative;
+    transition: background 160ms ease;
+  }
+  .feed-row:last-child { border-bottom: none; }
+  .feed-row:hover { background: rgba(255,255,255,0.015); }
+  .feed-icon {
+    width: 30px; height: 30px; border-radius: 50%;
+    background: var(--elev); display: grid; place-items: center;
+    color: var(--fg-muted); font-size: 11px;
+    border: 1px solid var(--border);
+  }
+  .feed-icon.in { color: var(--accent); border-color: rgba(62,224,161,0.3); background: rgba(62,224,161,0.08); }
+  .feed-icon.out { color: var(--c2); border-color: rgba(106,166,255,0.3); background: rgba(106,166,255,0.08); }
+  .feed-icon.refund { color: var(--c4); border-color: rgba(245,158,11,0.3); background: rgba(245,158,11,0.08); }
+  .feed-main { min-width: 0; }
+  .feed-customer { font-size: 13px; font-weight: 500; }
+  .feed-meta { color: var(--fg-subtle); font-size: 11px; font-family: 'JetBrains Mono'; margin-top: 2px; }
+  .feed-amount { font-family: 'Space Grotesk'; font-weight: 500; font-size: 14px; }
+  .feed-amount.neg { color: var(--c4); }
+  .status-chip {
+    font-size: 10px; letter-spacing: 0.04em; text-transform: uppercase;
+    padding: 3px 8px; border-radius: 999px;
+    font-family: 'JetBrains Mono';
+  }
+  .status-chip.settled { color: var(--accent); background: rgba(62,224,161,0.10); }
+  .status-chip.pending { color: var(--c4); background: rgba(245,158,11,0.10); }
+  .status-chip.refund { color: var(--c2); background: rgba(106,166,255,0.10); }
+  .feed-time { color: var(--fg-subtle); font-size: 12px; font-family: 'JetBrains Mono'; }
+
+  .feed-row .row-actions {
+    position: absolute; right: 18px;
+    opacity: 0; transform: translateX(8px);
+    transition: all 200ms ease;
+    background: linear-gradient(90deg, transparent, var(--card) 30%);
+    padding-left: 32px;
+    display: flex; gap: 6px;
+  }
+  .feed-row:hover .row-actions { opacity: 1; transform: translateX(0); }
+  .row-action {
+    width: 26px; height: 26px;
+    background: var(--elev); border: 1px solid var(--border);
+    border-radius: 6px;
+    display: grid; place-items: center;
+    color: var(--fg-muted);
+    cursor: pointer;
+    transition: all 140ms ease;
+  }
+  .row-action:hover { color: var(--fg); border-color: var(--border-strong); }
+
+  /* shimmer for newly-arrived feed row */
+  .feed-row.fresh::before {
+    content: ""; position: absolute; inset: 0;
+    background: linear-gradient(115deg, transparent 30%, rgba(62,224,161,0.10) 50%, transparent 70%);
+    transform: translateX(-100%);
+    animation: shimmer-row 900ms ease-out 1 forwards;
+    pointer-events: none;
+  }
+  @keyframes shimmer-row { to { transform: translateX(100%); } }
+</style>
+</head>
+<body>
+
+<div class="app">
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="logo">
+      <div class="logo-mark">B</div>
+      <div class="logo-text">BlockPay</div>
+    </div>
+
+    <div class="env-switch">
+      <div class="env-opt">Test</div>
+      <div class="env-opt active">Live</div>
+    </div>
+
+    <div class="nav-section">
+      <div class="nav-label">Operate</div>
+      <a class="nav-item active" href="#">
+        <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="3" width="5" height="5" rx="1"/><rect x="9" y="3" width="5" height="5" rx="1"/><rect x="2" y="10" width="5" height="3" rx="1"/><rect x="9" y="10" width="5" height="3" rx="1"/></svg>
+        Overview
+      </a>
+      <a class="nav-item" href="#">
+        <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 5h12M2 8h12M2 11h6"/></svg>
+        Payments
+        <span class="nav-badge">142</span>
+      </a>
+      <a class="nav-item" href="#">
+        <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="3" width="12" height="10" rx="1.5"/><path d="M5 6h6M5 8.5h4"/></svg>
+        Invoices
+      </a>
+      <a class="nav-item" href="#">
+        <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 5l5 4 5-4M3 5v6h10V5"/></svg>
+        Payouts
+      </a>
+      <a class="nav-item" href="#">
+        <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="6" r="2.5"/><path d="M3 13c.5-2.5 2.5-4 5-4s4.5 1.5 5 4"/></svg>
+        Customers
+      </a>
+    </div>
+
+    <div class="nav-section">
+      <div class="nav-label">Sell</div>
+      <a class="nav-item" href="#">
+        <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M5 11l-2-2 2-2M11 5l2 2-2 2"/><path d="M9 4l-2 8"/></svg>
+        Payment links
+      </a>
+      <a class="nav-item" href="#">
+        <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2.5" y="2.5" width="11" height="11" rx="2"/><path d="M5 8h6"/></svg>
+        Integrations
+      </a>
+    </div>
+
+    <div class="nav-section">
+      <div class="nav-label">Account</div>
+      <a class="nav-item" href="#">
+        <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="2"/><path d="M8 2v2M8 12v2M14 8h-2M4 8H2M12.2 3.8l-1.4 1.4M5.2 10.8l-1.4 1.4M12.2 12.2l-1.4-1.4M5.2 5.2L3.8 3.8"/></svg>
+        Settings
+      </a>
+    </div>
+
+    <div class="sidebar-foot">
+      <div class="avatar"></div>
+      <div class="user-meta">
+        Northwind Studios<small>kaboomweb3@gmail.com</small>
+      </div>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="main">
+
+    <div class="topbar">
+      <div>
+        <h1>Overview</h1>
+        <div class="card-sub" style="margin-top: 6px;">May 16, 2026 · all values in USD</div>
+      </div>
+      <div class="topbar-meta">
+        <div class="range-pills">
+          <div class="range-pill">24h</div>
+          <div class="range-pill active">7d</div>
+          <div class="range-pill">30d</div>
+          <div class="range-pill">12m</div>
+        </div>
+        <div class="kbd-trigger">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="6" cy="6" r="4"/><path d="M9 9l3 3"/></svg>
+          Search
+          <span class="kbd">Cmd K</span>
+        </div>
+        <button class="btn-primary">
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2v8M2 6h8"/></svg>
+          New payment link
+        </button>
+      </div>
+    </div>
+
+    <!-- TILES -->
+    <div class="tiles">
+      <div class="tile">
+        <div class="tile-label">Volume <span class="tile-delta up">+12.4%</span></div>
+        <div class="tile-value tnum">
+          <span class="tile-currency">$</span><span id="v1">84,219</span><span class="tile-cents">.32</span>
+        </div>
+        <svg class="tile-spark" viewBox="0 0 100 36" preserveAspectRatio="none">
+          <defs><linearGradient id="sg1" x1="0" x2="0" y1="0" y2="1"><stop offset="0%" stop-color="#3ee0a1" stop-opacity="0.35"/><stop offset="100%" stop-color="#3ee0a1" stop-opacity="0"/></linearGradient></defs>
+          <path d="M0,28 L8,24 L16,26 L24,20 L32,22 L40,16 L48,18 L56,12 L64,14 L72,10 L80,11 L88,7 L96,8 L100,5 L100,36 L0,36 Z" fill="url(#sg1)"/>
+          <path d="M0,28 L8,24 L16,26 L24,20 L32,22 L40,16 L48,18 L56,12 L64,14 L72,10 L80,11 L88,7 L96,8 L100,5" fill="none" stroke="#3ee0a1" stroke-width="1.5"/>
+        </svg>
+      </div>
+
+      <div class="tile">
+        <div class="tile-label">Settled <span class="tile-delta up">+8</span></div>
+        <div class="tile-value tnum">142</div>
+        <svg class="tile-spark" viewBox="0 0 100 36" preserveAspectRatio="none">
+          <path d="M0,20 L10,22 L20,18 L30,21 L40,15 L50,18 L60,12 L70,14 L80,10 L90,12 L100,8" fill="none" stroke="#6aa6ff" stroke-width="1.5"/>
+        </svg>
+      </div>
+
+      <div class="tile">
+        <div class="tile-label">Refunds <span class="tile-delta down">+1</span></div>
+        <div class="tile-value tnum">3</div>
+        <svg class="tile-spark" viewBox="0 0 100 36" preserveAspectRatio="none">
+          <path d="M0,30 L20,30 L20,28 L40,28 L40,26 L60,26 L60,28 L80,28 L80,24 L100,24" fill="none" stroke="#f59e0b" stroke-width="1.5"/>
+        </svg>
+      </div>
+
+      <div class="tile">
+        <div class="tile-label">New customers <span class="tile-delta up">+22%</span></div>
+        <div class="tile-value tnum">47</div>
+        <svg class="tile-spark" viewBox="0 0 100 36" preserveAspectRatio="none">
+          <path d="M0,28 L10,26 L20,28 L30,22 L40,24 L50,18 L60,20 L70,14 L80,16 L90,10 L100,12" fill="none" stroke="#c084fc" stroke-width="1.5"/>
+        </svg>
+      </div>
+    </div>
+
+    <!-- CHART + BREAKDOWN -->
+    <div class="row-1">
+      <div class="card">
+        <div class="card-head">
+          <div>
+            <div class="card-title">Volume — last 7 days</div>
+            <div class="card-sub">$84,219.32 settled · $1,184.12 pending</div>
+          </div>
+          <div class="legend">
+            <span class="legend-item"><span class="legend-dot" style="background: var(--c1);"></span>This week</span>
+            <span class="legend-item"><span class="legend-dot" style="background: var(--c2); height:1px;"></span>Last week</span>
+          </div>
+        </div>
+        <svg class="chart" viewBox="0 0 600 220" preserveAspectRatio="none">
+          <defs>
+            <linearGradient id="g1" x1="0" x2="0" y1="0" y2="1">
+              <stop offset="0%" stop-color="#3ee0a1" stop-opacity="0.18"/>
+              <stop offset="100%" stop-color="#3ee0a1" stop-opacity="0"/>
+            </linearGradient>
+          </defs>
+          <!-- grid -->
+          <line x1="0" y1="40" x2="600" y2="40" class="grid-line"/>
+          <line x1="0" y1="90" x2="600" y2="90" class="grid-line"/>
+          <line x1="0" y1="140" x2="600" y2="140" class="grid-line"/>
+          <line x1="0" y1="190" x2="600" y2="190" class="grid-line"/>
+          <!-- axis labels -->
+          <text x="6" y="44" class="axis-label">$20k</text>
+          <text x="6" y="94" class="axis-label">$15k</text>
+          <text x="6" y="144" class="axis-label">$10k</text>
+          <text x="6" y="194" class="axis-label">$5k</text>
+
+          <!-- last week (dashed) -->
+          <path class="line-2" d="M0,160 L86,140 L172,150 L258,120 L344,135 L430,115 L516,110 L600,90"/>
+
+          <!-- this week -->
+          <path class="area-1" d="M0,170 L86,130 L172,145 L258,105 L344,90 L430,80 L516,65 L600,50 L600,220 L0,220 Z"/>
+          <path class="line-1" d="M0,170 L86,130 L172,145 L258,105 L344,90 L430,80 L516,65 L600,50"/>
+
+          <!-- dots -->
+          <circle cx="600" cy="50" r="3.5" class="dot"/>
+          <circle cx="600" cy="50" r="6" fill="none" stroke="#3ee0a1" stroke-opacity="0.4"/>
+
+          <!-- day labels -->
+          <text x="0"   y="214" class="axis-label">Fri</text>
+          <text x="86"  y="214" class="axis-label">Sat</text>
+          <text x="172" y="214" class="axis-label">Sun</text>
+          <text x="258" y="214" class="axis-label">Mon</text>
+          <text x="344" y="214" class="axis-label">Tue</text>
+          <text x="430" y="214" class="axis-label">Wed</text>
+          <text x="516" y="214" class="axis-label">Thu</text>
+          <text x="580" y="214" class="axis-label">Today</text>
+        </svg>
+      </div>
+
+      <div class="card">
+        <div class="card-head">
+          <div>
+            <div class="card-title">By rail</div>
+            <div class="card-sub">7-day breakdown</div>
+          </div>
+        </div>
+
+        <div class="breakdown-row">
+          <div class="breakdown-name">USDC on Base<small>52.4%</small></div>
+          <div class="breakdown-bar"><div class="breakdown-bar-fill" style="width: 52%; background: var(--c1);"></div></div>
+          <div class="breakdown-value tnum">$44,138</div>
+        </div>
+        <div class="breakdown-row">
+          <div class="breakdown-name">USDC on Solana<small>27.1%</small></div>
+          <div class="breakdown-bar"><div class="breakdown-bar-fill" style="width: 27%; background: var(--c2);"></div></div>
+          <div class="breakdown-value tnum">$22,824</div>
+        </div>
+        <div class="breakdown-row">
+          <div class="breakdown-name">USDC on Ethereum<small>14.2%</small></div>
+          <div class="breakdown-bar"><div class="breakdown-bar-fill" style="width: 14%; background: var(--c3);"></div></div>
+          <div class="breakdown-value tnum">$11,959</div>
+        </div>
+        <div class="breakdown-row">
+          <div class="breakdown-name">PYUSD on Solana<small>6.3%</small></div>
+          <div class="breakdown-bar"><div class="breakdown-bar-fill" style="width: 6%; background: var(--c4);"></div></div>
+          <div class="breakdown-value tnum">$5,298</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ACTIVITY -->
+    <div class="card feed-card">
+      <div class="feed-head">
+        <div class="feed-tabs">
+          <div class="feed-tab active">All activity</div>
+          <div class="feed-tab">Payments</div>
+          <div class="feed-tab">Payouts</div>
+          <div class="feed-tab">Refunds</div>
+        </div>
+        <a href="#" style="font-size: 13px; color: var(--fg-muted); text-decoration: none;">View all <span style="opacity: 0.5;">&rarr;</span></a>
+      </div>
+
+      <div class="feed-row fresh">
+        <div class="feed-icon in">
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 9V3M3 6l3-3 3 3"/></svg>
+        </div>
+        <div class="feed-main">
+          <div class="feed-customer">contact@swiftform.io</div>
+          <div class="feed-meta">USDC · Base · tx 5c91…b2af</div>
+        </div>
+        <div class="feed-amount tnum">$1,249.50</div>
+        <div class="status-chip settled">Settled</div>
+        <div class="feed-time">12s ago</div>
+        <div class="row-actions">
+          <div class="row-action"><svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="2" width="6" height="8" rx="1"/><path d="M5 4h5v6"/></svg></div>
+          <div class="row-action"><svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 6c1.5-2.5 3-4 4-4s2.5 1.5 4 4M2 6c1.5 2.5 3 4 4 4s2.5-1.5 4-4"/><circle cx="6" cy="6" r="1.5"/></svg></div>
+        </div>
+      </div>
+
+      <div class="feed-row">
+        <div class="feed-icon in">
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 9V3M3 6l3-3 3 3"/></svg>
+        </div>
+        <div class="feed-main">
+          <div class="feed-customer">leah@harborlight.studio</div>
+          <div class="feed-meta">USDC · Solana · tx 9af2…1e74</div>
+        </div>
+        <div class="feed-amount tnum">$420.00</div>
+        <div class="status-chip settled">Settled</div>
+        <div class="feed-time">4m ago</div>
+      </div>
+
+      <div class="feed-row">
+        <div class="feed-icon in">
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 9V3M3 6l3-3 3 3"/></svg>
+        </div>
+        <div class="feed-main">
+          <div class="feed-customer">billing@thornedge.app</div>
+          <div class="feed-meta">USDC · Base · tx 2bf8…44a1</div>
+        </div>
+        <div class="feed-amount tnum">$1,200.00</div>
+        <div class="status-chip pending">Pending</div>
+        <div class="feed-time">9m ago</div>
+      </div>
+
+      <div class="feed-row">
+        <div class="feed-icon refund">
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M2 6h6M5 3l3 3-3 3"/></svg>
+        </div>
+        <div class="feed-main">
+          <div class="feed-customer">refund · cust_8fa2</div>
+          <div class="feed-meta">USDC · Base · partial</div>
+        </div>
+        <div class="feed-amount tnum neg">-$78.00</div>
+        <div class="status-chip refund">Refunded</div>
+        <div class="feed-time">37m ago</div>
+      </div>
+
+      <div class="feed-row">
+        <div class="feed-icon out">
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 3v6M3 6l3 3 3-3"/></svg>
+        </div>
+        <div class="feed-main">
+          <div class="feed-customer">Payout to Mercury ••3491</div>
+          <div class="feed-meta">ACH · scheduled for May 17</div>
+        </div>
+        <div class="feed-amount tnum">$12,400.00</div>
+        <div class="status-chip pending">Queued</div>
+        <div class="feed-time">1h ago</div>
+      </div>
+
+      <div class="feed-row">
+        <div class="feed-icon in">
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 9V3M3 6l3-3 3 3"/></svg>
+        </div>
+        <div class="feed-main">
+          <div class="feed-customer">ops@coldlight.dev</div>
+          <div class="feed-meta">USDC · Ethereum · tx 7d12…8baa</div>
+        </div>
+        <div class="feed-amount tnum">$5,000.00</div>
+        <div class="status-chip settled">Settled</div>
+        <div class="feed-time">2h ago</div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<script>
+  // gentle digit roll on the volume tile every few seconds for demo
+  const v1 = document.getElementById('v1');
+  let amount = 84219;
+  setInterval(() => {
+    amount += Math.floor(Math.random() * 220);
+    const formatted = amount.toLocaleString('en-US');
+    if (v1.textContent !== formatted) {
+      v1.style.transition = 'transform 220ms ease-out, opacity 220ms ease-out';
+      v1.style.transform = 'translateY(-6px)';
+      v1.style.opacity = '0';
+      setTimeout(() => {
+        v1.textContent = formatted;
+        v1.style.transform = 'translateY(6px)';
+        requestAnimationFrame(() => {
+          v1.style.transform = 'translateY(0)';
+          v1.style.opacity = '1';
+        });
+      }, 220);
+    }
+  }, 5200);
+
+  // re-trigger shimmer on first feed row every 12s for demo
+  setInterval(() => {
+    const fresh = document.querySelector('.feed-row.fresh');
+    if (fresh) {
+      fresh.classList.remove('fresh');
+      void fresh.offsetWidth;
+      fresh.classList.add('fresh');
+    }
+  }, 12000);
+
+  // env switch
+  document.querySelectorAll('.env-opt').forEach(el => {
+    el.addEventListener('click', () => {
+      document.querySelectorAll('.env-opt').forEach(e => e.classList.remove('active'));
+      el.classList.add('active');
+    });
+  });
+  // range pills
+  document.querySelectorAll('.range-pill').forEach(el => {
+    el.addEventListener('click', () => {
+      document.querySelectorAll('.range-pill').forEach(e => e.classList.remove('active'));
+      el.classList.add('active');
+    });
+  });
+</script>
+
+</body>
+</html>

@@ -1,5 +1,6 @@
 import { Nav } from "@/components/nav";
 import { Footer } from "@/components/footer";
+import { PaletteScope } from "@/components/palette-scope";
 
 type Section = {
   title: string;
@@ -61,20 +62,23 @@ const sections: Section[] = [
 
 export default function TermsPage() {
   return (
-    <>
+    <PaletteScope>
       <Nav active="Resources" />
       <main>
         <section className="relative overflow-hidden">
           <div className="absolute inset-0 bg-grid bg-grid-fade" aria-hidden="true" />
-          <div className="absolute inset-x-0 top-0 h-[640px] bg-[radial-gradient(ellipse_at_top,rgba(74,222,128,0.08),transparent_70%)]" />
+          <div className="absolute inset-x-0 top-0 h-[640px] bg-[radial-gradient(ellipse_at_top,color-mix(in_srgb,var(--accent)_8%,transparent),transparent_70%)]" />
           <div className="relative mx-auto max-w-7xl px-8 pt-40 pb-12 text-center">
-            <span className="inline-flex items-center rounded-full border border-[rgba(74,222,128,0.35)] bg-[rgba(74,222,128,0.06)] px-3 py-1 text-xs font-medium uppercase tracking-[0.18em] text-accent">
+            <span className="inline-flex items-center rounded-full border border-[var(--border-strong)] bg-[var(--bg-elev)] px-3 py-1 text-xs font-medium uppercase tracking-[0.18em] text-fg-muted">
               Legal
             </span>
-            <h1 className="mx-auto mt-6 max-w-3xl font-display text-5xl font-bold leading-[1.05] tracking-tight md:text-6xl">
+            <h1
+              className="mx-auto mt-6 max-w-3xl font-display text-5xl font-bold leading-[1.05] text-fg md:text-6xl"
+              style={{ letterSpacing: "-0.02em" }}
+            >
               Terms of <span className="text-accent">Service</span>
             </h1>
-            <p className="mt-6 text-sm text-zinc-500">Last updated: 2026-05-15</p>
+            <p className="mt-6 text-sm text-fg-subtle">Last updated: 2026-05-15</p>
           </div>
         </section>
 
@@ -83,10 +87,10 @@ export default function TermsPage() {
             <div className="space-y-10">
               {sections.map((s) => (
                 <div key={s.title}>
-                  <h2 className="font-display text-xl font-semibold text-white">
+                  <h2 className="font-display text-xl font-semibold text-fg">
                     {s.title}
                   </h2>
-                  <p className="mt-3 text-sm leading-relaxed text-zinc-400">
+                  <p className="mt-3 text-sm leading-relaxed text-fg-muted">
                     {s.body}
                   </p>
                 </div>
@@ -96,6 +100,6 @@ export default function TermsPage() {
         </section>
       </main>
       <Footer />
-    </>
+    </PaletteScope>
   );
 }

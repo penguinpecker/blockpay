@@ -2,6 +2,7 @@ import Link from "next/link";
 import { ChevronRight } from "lucide-react";
 import { Nav } from "@/components/nav";
 import { Footer } from "@/components/footer";
+import { PaletteScope } from "@/components/palette-scope";
 
 export const metadata = {
   title: "JavaScript SDK — BlockPay docs",
@@ -106,21 +107,24 @@ const sections: Section[] = [
 
 export default function SdkPage() {
   return (
-    <>
+    <PaletteScope>
       <Nav active="Docs" />
       <main>
         <section className="relative overflow-hidden">
           <div className="absolute inset-0 bg-grid bg-grid-fade" aria-hidden="true" />
-          <div className="absolute inset-x-0 top-0 h-[600px] bg-[radial-gradient(ellipse_at_top,rgba(74,222,128,0.08),transparent_70%)]" />
+          <div className="absolute inset-x-0 top-0 h-[600px] bg-[radial-gradient(ellipse_at_top,color-mix(in_srgb,var(--accent)_8%,transparent),transparent_70%)]" />
           <div className="relative mx-auto max-w-5xl px-8 py-24">
-            <span className="inline-flex items-center rounded-full border border-[rgba(74,222,128,0.35)] bg-[rgba(74,222,128,0.06)] px-3 py-1 text-xs font-medium uppercase tracking-[0.18em] text-accent">
+            <span className="inline-flex items-center rounded-full border border-[var(--border-strong)] bg-[var(--bg-elev)] px-3 py-1 text-xs font-medium uppercase tracking-[0.18em] text-fg-muted">
               JavaScript SDK
             </span>
-            <h1 className="mt-6 font-display text-5xl font-bold leading-[1.05] tracking-tight md:text-6xl">
+            <h1
+              className="mt-6 font-display text-5xl font-bold leading-[1.05] text-fg md:text-6xl"
+              style={{ letterSpacing: "-0.02em" }}
+            >
               The <span className="text-accent">@blockpay/checkout</span>{" "}
               reference.
             </h1>
-            <p className="mt-7 max-w-2xl text-zinc-300">
+            <p className="mt-7 max-w-2xl text-fg-muted">
               A small, sharp surface for stablecoin checkout. Six methods, one
               type-safe client, zero ceremony.
             </p>
@@ -136,7 +140,7 @@ export default function SdkPage() {
 
             <div className="mt-20 space-y-16">
               <Block id="install" title="Install">
-                <p className="text-zinc-400">
+                <p className="text-fg-muted">
                   Add the SDK to your project. It is a pure ESM package, ships
                   with TypeScript declarations, and has zero runtime
                   dependencies.
@@ -145,7 +149,7 @@ export default function SdkPage() {
               </Block>
 
               <Block id="initialize" title="Initialize">
-                <p className="text-zinc-400">
+                <p className="text-fg-muted">
                   Construct a single client and reuse it. The API key is a
                   secret — keep it server-side.
                 </p>
@@ -158,7 +162,7 @@ export default function SdkPage() {
               </Block>
 
               <Block id="invoices" title="Invoices">
-                <p className="text-zinc-400">
+                <p className="text-fg-muted">
                   Invoices are the canonical record of a charge. Create one,
                   redirect the customer to{" "}
                   <InlineCode>invoice.checkoutUrl</InlineCode>, and your
@@ -171,7 +175,7 @@ export default function SdkPage() {
                   <span className="text-[#a5f3fc]">CreateInvoiceParams</span>):{" "}
                   <span className="text-[#a5f3fc]">Promise&lt;Invoice&gt;</span>
                 </Signature>
-                <p className="mt-3 text-zinc-400">
+                <p className="mt-3 text-fg-muted">
                   Creates a fresh invoice in <InlineCode>open</InlineCode>{" "}
                   state. The chain and currency lock the settlement asset; you
                   cannot switch them after creation.
@@ -184,7 +188,7 @@ export default function SdkPage() {
                   <span className="text-[#fde68a]">string</span>):{" "}
                   <span className="text-[#a5f3fc]">Promise&lt;Invoice&gt;</span>
                 </Signature>
-                <p className="mt-3 text-zinc-400">
+                <p className="mt-3 text-fg-muted">
                   Fetches a single invoice by id. Returns the latest known
                   status, including which chain transaction settled it.
                 </p>
@@ -198,7 +202,7 @@ export default function SdkPage() {
                     Promise&lt;{"{ invoices: Invoice[] }"}&gt;
                   </span>
                 </Signature>
-                <p className="mt-3 text-zinc-400">
+                <p className="mt-3 text-fg-muted">
                   Lists invoices, optionally filtered by merchant or status.
                   Useful for backfilling your own database.
                 </p>
@@ -206,7 +210,7 @@ export default function SdkPage() {
               </Block>
 
               <Block id="payment-links" title="Payment Links">
-                <p className="text-zinc-400">
+                <p className="text-fg-muted">
                   Payment links are shareable URLs that produce invoices on
                   demand. Use a one-off link to charge a specific customer, or
                   a reusable link to drop a checkout into a Linktree, email
@@ -224,7 +228,7 @@ export default function SdkPage() {
               </Block>
 
               <Block id="webhooks" title="Webhooks">
-                <p className="text-zinc-400">
+                <p className="text-fg-muted">
                   Webhooks fire on every state change. The SDK ships a helper
                   that verifies the signature using a constant-time comparison
                   and gives you a typed event back.
@@ -234,7 +238,7 @@ export default function SdkPage() {
                   <span className="text-[#a5f3fc]">VerifyWebhookParams</span>):{" "}
                   <span className="text-[#a5f3fc]">BlockPayEvent</span>
                 </Signature>
-                <p className="mt-3 text-zinc-400">
+                <p className="mt-3 text-fg-muted">
                   Throws if the signature does not match. Always pass the raw
                   request body — re-serialised JSON will not match the
                   signature.
@@ -243,7 +247,7 @@ export default function SdkPage() {
               </Block>
 
               <Block id="receipts" title="Receipts">
-                <p className="text-zinc-400">
+                <p className="text-fg-muted">
                   Every settled invoice produces a signed receipt CID. Verify
                   it client-side to prove fulfilment without trusting the
                   merchant or the BlockPay API.
@@ -273,7 +277,7 @@ export default function SdkPage() {
         </section>
       </main>
       <Footer />
-    </>
+    </PaletteScope>
   );
 }
 
@@ -288,7 +292,7 @@ function Block({
 }) {
   return (
     <section id={id} className="scroll-mt-24">
-      <h2 className="font-display text-3xl font-semibold tracking-tight md:text-4xl">
+      <h2 className="font-display text-3xl font-semibold tracking-tight text-fg md:text-4xl">
         {title}
       </h2>
       <div className="mt-6">{children}</div>
@@ -298,7 +302,7 @@ function Block({
 
 function Subhead({ children }: { children: React.ReactNode }) {
   return (
-    <h3 className="mt-10 font-display text-lg font-semibold text-white">
+    <h3 className="mt-10 font-display text-lg font-semibold text-fg">
       <InlineCode>{children}</InlineCode>
     </h3>
   );
@@ -306,7 +310,7 @@ function Subhead({ children }: { children: React.ReactNode }) {
 
 function Signature({ children }: { children: React.ReactNode }) {
   return (
-    <div className="mt-3 overflow-x-auto rounded-xl border border-[rgba(74,222,128,0.18)] bg-black px-4 py-3 font-mono text-[13px] text-zinc-300">
+    <div className="mt-3 overflow-x-auto rounded-xl border border-[var(--border)] bg-[var(--bg)] px-4 py-3 font-mono text-[13px] text-fg-muted">
       {children}
     </div>
   );
@@ -314,7 +318,7 @@ function Signature({ children }: { children: React.ReactNode }) {
 
 function InlineCode({ children }: { children: React.ReactNode }) {
   return (
-    <code className="rounded bg-white/5 px-1.5 py-0.5 font-mono text-[13px] text-zinc-300">
+    <code className="rounded bg-[var(--bg-elev)] px-1.5 py-0.5 font-mono text-[13px] text-fg-muted">
       {children}
     </code>
   );
@@ -331,10 +335,10 @@ function CodeBlock({
 }) {
   const lines = code.split("\n");
   return (
-    <div className="mt-4 overflow-hidden rounded-2xl border border-[rgba(74,222,128,0.18)] bg-black">
+    <div className="mt-4 overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--bg)]">
       {label ? (
-        <div className="flex items-center justify-between border-b border-[rgba(74,222,128,0.18)] px-5 py-3">
-          <span className="font-display text-xs uppercase tracking-[0.18em] text-zinc-500">
+        <div className="flex items-center justify-between border-b border-[var(--border)] px-5 py-3">
+          <span className="font-display text-xs uppercase tracking-[0.18em] text-fg-subtle">
             {label}
           </span>
           {lang ? (
@@ -348,10 +352,10 @@ function CodeBlock({
         <code>
           {lines.map((line, i) => (
             <div key={i} className="flex gap-4">
-              <span className="select-none text-zinc-600" aria-hidden="true">
+              <span className="select-none text-fg-subtle" aria-hidden="true">
                 {String(i + 1).padStart(2, "0")}
               </span>
-              <span className="whitespace-pre text-zinc-300">{line}</span>
+              <span className="whitespace-pre text-fg-muted">{line}</span>
             </div>
           ))}
         </code>

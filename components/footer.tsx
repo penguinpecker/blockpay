@@ -44,7 +44,7 @@ export function Footer() {
           </div>
           {cols.map((c) => (
             <div key={c.title}>
-              <h4 className="font-display text-base font-semibold text-white">
+              <h4 className="font-display text-base font-semibold text-fg">
                 {c.title}
               </h4>
               <ul className="mt-5 space-y-3">
@@ -52,7 +52,7 @@ export function Footer() {
                   <li key={i.label}>
                     <Link
                       href={i.href}
-                      className="text-sm text-zinc-400 transition-colors hover:text-white"
+                      className="text-sm text-fg-muted transition-colors hover:text-fg"
                     >
                       {i.label}
                     </Link>
@@ -62,7 +62,7 @@ export function Footer() {
             </div>
           ))}
         </div>
-        <div className="mt-14 border-t border-white/10 pt-8 text-center text-sm text-zinc-500">
+        <div className="mt-14 border-t border-[var(--border)] pt-8 text-center text-sm text-fg-subtle">
           Private Policy
         </div>
       </div>

@@ -1,0 +1,13 @@
+parameters:
+    level: 6
+    paths:
+        - src
+    treatPhpDocTypesAsCertain: false
+    ignoreErrors:
+        # WC_Order is a WooCommerce class that is intentionally only available
+        # at runtime inside a WordPress install. The SDK guards every call
+        # via class_exists / method_exists, but PHPStan still sees the bare
+        # name in a docblock.
+        -
+            message: '#WC_Order#'
+            path: src/WooHelpers.php

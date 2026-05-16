@@ -1,0 +1,83 @@
+.index {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 4rem 1rem;
+  font-family: Inter, -apple-system, BlinkMacSystemFont, sans-serif;
+  background: #0b0f17;
+  color: #f6f7fb;
+  min-height: 100vh;
+}
+
+.content {
+  width: 100%;
+  max-width: 640px;
+}
+
+.heading {
+  font-size: 2.5rem;
+  font-weight: 700;
+  margin-bottom: 1rem;
+}
+
+.text {
+  font-size: 1.05rem;
+  line-height: 1.55;
+  color: #c8cdd9;
+  margin-bottom: 2rem;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-bottom: 2.5rem;
+  padding: 1.25rem;
+  background: #131826;
+  border: 1px solid #1f2638;
+  border-radius: 12px;
+}
+
+.label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  font-size: 0.9rem;
+  color: #c8cdd9;
+}
+
+.input {
+  padding: 0.65rem 0.85rem;
+  border-radius: 8px;
+  border: 1px solid #2a3247;
+  background: #0b0f17;
+  color: #f6f7fb;
+  font-size: 0.95rem;
+}
+
+.button {
+  align-self: flex-start;
+  padding: 0.65rem 1.1rem;
+  border-radius: 8px;
+  border: none;
+  background: #5b6bff;
+  color: white;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: 0.75rem;
+}
+
+.list li {
+  padding: 1rem;
+  background: #131826;
+  border: 1px solid #1f2638;
+  border-radius: 10px;
+  line-height: 1.45;
+}

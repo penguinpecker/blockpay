@@ -1,5 +1,6 @@
 import { Nav } from "@/components/nav";
 import { Footer } from "@/components/footer";
+import { PaletteScope } from "@/components/palette-scope";
 
 type Post = {
   date: string;
@@ -30,17 +31,20 @@ const posts: Post[] = [
 
 export default function BlogPage() {
   return (
-    <>
+    <PaletteScope>
       <Nav active="Company" />
       <main>
         <section className="relative overflow-hidden">
           <div className="absolute inset-0 bg-grid bg-grid-fade" aria-hidden="true" />
-          <div className="absolute inset-x-0 top-0 h-[640px] bg-[radial-gradient(ellipse_at_top,rgba(74,222,128,0.08),transparent_70%)]" />
+          <div className="absolute inset-x-0 top-0 h-[640px] bg-[radial-gradient(ellipse_at_top,color-mix(in_srgb,var(--accent)_8%,transparent),transparent_70%)]" />
           <div className="relative mx-auto max-w-7xl px-8 pt-40 pb-12 text-center">
-            <span className="inline-flex items-center rounded-full border border-[rgba(74,222,128,0.35)] bg-[rgba(74,222,128,0.06)] px-3 py-1 text-xs font-medium uppercase tracking-[0.18em] text-accent">
+            <span className="inline-flex items-center rounded-full border border-[var(--border-strong)] bg-[var(--bg-elev)] px-3 py-1 text-xs font-medium uppercase tracking-[0.18em] text-fg-muted">
               Blog
             </span>
-            <h1 className="mx-auto mt-6 max-w-3xl font-display text-5xl font-bold leading-[1.05] tracking-tight md:text-6xl">
+            <h1
+              className="mx-auto mt-6 max-w-3xl font-display text-5xl font-bold leading-[1.05] text-fg md:text-6xl"
+              style={{ letterSpacing: "-0.02em" }}
+            >
               <span className="text-accent">Notes</span> from the team
             </h1>
           </div>
@@ -48,7 +52,7 @@ export default function BlogPage() {
 
         <section className="px-8 pb-28">
           <div className="mx-auto max-w-7xl">
-            <p className="mb-8 text-sm uppercase tracking-[0.18em] text-zinc-500">
+            <p className="mb-8 text-sm uppercase tracking-[0.18em] text-fg-subtle">
               Articles coming soon
             </p>
             <div className="grid gap-6 md:grid-cols-3">
@@ -57,13 +61,13 @@ export default function BlogPage() {
                   key={p.title}
                   className="card-frame flex h-full flex-col p-7"
                 >
-                  <time className="text-xs uppercase tracking-[0.16em] text-zinc-500">
+                  <time className="text-xs uppercase tracking-[0.16em] text-fg-subtle">
                     {p.date}
                   </time>
-                  <h2 className="mt-4 font-display text-xl font-semibold text-white">
+                  <h2 className="mt-4 font-display text-xl font-semibold text-fg">
                     {p.title}
                   </h2>
-                  <p className="mt-4 text-sm leading-relaxed text-zinc-400">
+                  <p className="mt-4 text-sm leading-relaxed text-fg-muted">
                     {p.preview}
                   </p>
                 </article>
@@ -73,6 +77,6 @@ export default function BlogPage() {
         </section>
       </main>
       <Footer />
-    </>
+    </PaletteScope>
   );
 }

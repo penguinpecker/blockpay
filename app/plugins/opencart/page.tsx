@@ -2,23 +2,27 @@ import Link from "next/link";
 import { ChevronRight } from "lucide-react";
 import { Nav } from "@/components/nav";
 import { Footer } from "@/components/footer";
+import { PaletteScope } from "@/components/palette-scope";
 
 export default function OpenCartPluginPage() {
   return (
-    <>
+    <PaletteScope>
       <Nav active="Developers" />
       <main>
         <section className="relative overflow-hidden">
           <div className="absolute inset-0 bg-grid bg-grid-fade" aria-hidden="true" />
-          <div className="absolute inset-x-0 top-0 h-[640px] bg-[radial-gradient(ellipse_at_top,rgba(74,222,128,0.08),transparent_70%)]" />
+          <div className="absolute inset-x-0 top-0 h-[640px] bg-[radial-gradient(ellipse_at_top,color-mix(in_srgb,var(--accent)_8%,transparent),transparent_70%)]" />
           <div className="relative mx-auto max-w-7xl px-8 pt-40 pb-12 text-center">
-            <span className="inline-flex items-center rounded-full border border-[rgba(74,222,128,0.35)] bg-[rgba(74,222,128,0.06)] px-3 py-1 text-xs font-medium uppercase tracking-[0.18em] text-accent">
+            <span className="inline-flex items-center rounded-full border border-[var(--border-strong)] bg-[var(--bg-elev)] px-3 py-1 text-xs font-medium uppercase tracking-[0.18em] text-fg-muted">
               Plugin
             </span>
-            <h1 className="mx-auto mt-6 max-w-3xl font-display text-5xl font-bold leading-[1.05] tracking-tight md:text-6xl">
+            <h1
+              className="mx-auto mt-6 max-w-3xl font-display text-5xl font-bold leading-[1.05] text-fg md:text-6xl"
+              style={{ letterSpacing: "-0.02em" }}
+            >
               BlockPay for <span className="text-accent">OpenCart</span>
             </h1>
-            <p className="mx-auto mt-7 max-w-2xl text-base text-zinc-300">
+            <p className="mx-auto mt-7 max-w-2xl text-base text-fg-muted">
               A production-ready stablecoin payment extension for OpenCart 3.x
               and 4.x. Settle every order on-chain, straight to the wallet you
               control.
@@ -27,7 +31,7 @@ export default function OpenCartPluginPage() {
         </section>
 
         <section className="px-8 pb-16">
-          <div className="mx-auto max-w-3xl space-y-6 text-base leading-relaxed text-zinc-300">
+          <div className="mx-auto max-w-3xl space-y-6 text-base leading-relaxed text-fg-muted">
             <p>
               The OpenCart extension installs through the standard extension
               installer. Once enabled, you configure the BlockPay payment method
@@ -47,10 +51,10 @@ export default function OpenCartPluginPage() {
 
         <section className="px-8 pb-28">
           <div className="mx-auto max-w-3xl card-frame px-8 py-10 text-center md:px-12">
-            <h2 className="font-display text-3xl font-semibold tracking-tight">
-              <span className="text-accent">Install instructions</span> coming soon
+            <h2 className="font-display text-3xl font-semibold tracking-tight text-fg">
+              Install instructions coming soon
             </h2>
-            <p className="mx-auto mt-4 max-w-xl text-sm text-zinc-400">
+            <p className="mx-auto mt-4 max-w-xl text-sm text-fg-muted">
               The extension is in private beta. Join the waitlist and we&apos;ll
               ping you with a download link and a step-by-step setup guide.
             </p>
@@ -64,6 +68,6 @@ export default function OpenCartPluginPage() {
         </section>
       </main>
       <Footer />
-    </>
+    </PaletteScope>
   );
 }
