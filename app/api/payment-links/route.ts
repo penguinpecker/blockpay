@@ -8,7 +8,7 @@
 
 import { NextResponse, type NextRequest } from "next/server";
 import crypto from "node:crypto";
-import { auth } from "@/auth";
+import { getSession } from "@/lib/server-session";
 import { prisma } from "@/lib/prisma";
 import { CHAINS, type ChainKey } from "@/lib/contracts";
 
@@ -43,12 +43,12 @@ function isBaseAmount(v: unknown): v is string {
 }
 
 export async function GET() {
-  const session = await auth();
-  if (!session?.user?.id) {
+  const session = await getSession();
+  if (!session) {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   }
   const merchant = await prisma.merchant.findUnique({
-    where: { userId: session.user.id as string },
+    where: { userId: session.userId },
   });
   if (!merchant) {
     return NextResponse.json({ error: "no_merchant" }, { status: 404 });
@@ -61,12 +61,12 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest) {
-  const session = await auth();
-  if (!session?.user?.id) {
+  const session = await getSession();
+  if (!session) {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   }
   const merchant = await prisma.merchant.findUnique({
-    where: { userId: session.user.id as string },
+    where: { userId: session.userId },
   });
   if (!merchant) {
     return NextResponse.json({ error: "no_merchant" }, { status: 404 });

@@ -1,39 +1,33 @@
 "use client";
 
 import Link from "next/link";
-import { Suspense, useEffect, useState } from "react";
+import { Suspense, useCallback, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { signIn } from "next-auth/react";
-import { SiweMessage } from "siwe";
-import { getAddress } from "viem";
+import { useLogin, usePrivy } from "@privy-io/react-auth";
 import {
   CheckCircle2,
   ChevronRight,
-  Mail,
-  Wallet,
   Loader2,
   AlertTriangle,
+  LogIn,
 } from "lucide-react";
 import { Nav } from "@/components/nav";
 import { Footer } from "@/components/footer";
 import { PaletteScope } from "@/components/palette-scope";
 
-type AuthMethods = {
-  google: boolean;
-  email: boolean;
-  demoEmail: boolean;
-  wallet: boolean;
-};
+/**
+ * Login surface. Privy owns the actual provider selection (email,
+ * Google, every wallet type) — we just trigger its modal and react
+ * to the result. After a successful login we POST to
+ * /api/auth/privy/sync so the local User row is created/refreshed,
+ * then redirect to the dashboard (or `?from=` if present).
+ */
 
 type SubmitState =
   | { kind: "idle" }
-  | { kind: "submitting"; via: "google" | "email" | "wallet" }
-  | { kind: "magic-sent"; email: string }
+  | { kind: "submitting" }
   | { kind: "success" }
   | { kind: "error"; message: string };
-
-const inputCls =
-  "w-full rounded-xl border border-[var(--border)] bg-[var(--bg-elev)] px-4 py-3 text-sm text-fg placeholder:text-fg-subtle outline-none transition-colors focus:border-[var(--border-active)]";
 
 export default function LoginPage() {
   return (
@@ -44,120 +38,70 @@ export default function LoginPage() {
 }
 
 function LoginPageInner() {
-  const [email, setEmail] = useState("");
   const [state, setState] = useState<SubmitState>({ kind: "idle" });
-  const [methods, setMethods] = useState<AuthMethods | null>(null);
   const router = useRouter();
   const params = useSearchParams();
   const next = params.get("from") || "/dashboard";
+  const { ready, authenticated, getAccessToken } = usePrivy();
 
-  useEffect(() => {
-    fetch("/api/auth/methods")
-      .then((r) => r.json())
-      .then((m: AuthMethods) => setMethods(m))
-      .catch(() => setMethods({ google: false, email: false, demoEmail: true, wallet: true }));
-  }, []);
-
-  const busy = state.kind === "submitting";
-
-  async function handleGoogle() {
-    setState({ kind: "submitting", via: "google" });
+  const finalizeLogin = useCallback(async () => {
+    setState({ kind: "submitting" });
     try {
-      await signIn("google", { callbackUrl: next });
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : "Sign-in failed";
-      setState({ kind: "error", message: msg });
-    }
-  }
-
-  async function handleEmail(e: React.FormEvent) {
-    e.preventDefault();
-    if (!email || !email.includes("@")) {
-      setState({ kind: "error", message: "Enter a valid email." });
-      return;
-    }
-    setState({ kind: "submitting", via: "email" });
-    try {
-      if (methods?.email) {
-        const result = await signIn("resend", { email, redirect: false, callbackUrl: next });
-        if (result?.error) {
-          setState({ kind: "error", message: "Could not send sign-in email." });
-          return;
-        }
-        setState({ kind: "magic-sent", email });
-        return;
-      }
-      // Fallback: demo-email creates a user immediately (testnet only)
-      const result = await signIn("demo-email", { email, redirect: false });
-      if (result?.error) {
-        setState({ kind: "error", message: "Sign-in failed. Try again." });
-        return;
-      }
-      setState({ kind: "success" });
-      router.push(next);
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : "Sign-in failed";
-      setState({ kind: "error", message: msg });
-    }
-  }
-
-  async function handleWallet() {
-    if (typeof window === "undefined" || !window.ethereum) {
-      setState({
-        kind: "error",
-        message: "No injected wallet. Install MetaMask or a compatible wallet.",
-      });
-      return;
-    }
-    setState({ kind: "submitting", via: "wallet" });
-    try {
-      const eth = window.ethereum as {
-        request: (args: { method: string; params?: unknown[] }) => Promise<unknown>;
+      const token = await getAccessToken();
+      const headers: Record<string, string> = {
+        "Content-Type": "application/json",
       };
-      const accounts = (await eth.request({ method: "eth_requestAccounts" })) as string[];
-      if (!accounts || accounts.length === 0) {
-        setState({ kind: "error", message: "Wallet returned no account." });
-        return;
-      }
-      // MetaMask returns lowercase; SIWE strict-validates EIP-55, so normalize.
-      const address = getAddress(accounts[0] as `0x${string}`);
-      const chainIdHex = (await eth.request({ method: "eth_chainId" })) as string;
-      const chainId = parseInt(chainIdHex, 16);
-
-      const nonceRes = await fetch("/api/auth/siwe-nonce");
-      const { nonce } = (await nonceRes.json()) as { nonce: string };
-
-      const message = new SiweMessage({
-        domain: window.location.host,
-        address,
-        statement: "Sign in to BlockPay merchant dashboard.",
-        uri: window.location.origin,
-        version: "1",
-        chainId,
-        nonce,
-        issuedAt: new Date().toISOString(),
+      if (token) headers.Authorization = `Bearer ${token}`;
+      const res = await fetch("/api/auth/privy/sync", {
+        method: "POST",
+        headers,
       });
-      const prepared = message.prepareMessage();
-      const signature = (await eth.request({
-        method: "personal_sign",
-        params: [prepared, address],
-      })) as string;
-
-      const result = await signIn("siwe", {
-        message: JSON.stringify(message),
-        signature,
-        redirect: false,
-      });
-      if (result?.error) {
-        setState({ kind: "error", message: "SIWE verification failed." });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        setState({
+          kind: "error",
+          message: data?.error ? `Sync failed: ${data.error}` : "Could not finalize sign-in.",
+        });
         return;
       }
       setState({ kind: "success" });
       router.push(next);
     } catch (err) {
-      const msg = err instanceof Error ? err.message.split("\n")[0] : "Wallet sign-in failed";
+      const msg = err instanceof Error ? err.message : "Sign-in failed";
       setState({ kind: "error", message: msg });
     }
+  }, [getAccessToken, next, router]);
+
+  const { login } = useLogin({
+    onComplete: () => {
+      void finalizeLogin();
+    },
+    onError: (err) => {
+      // Privy emits a PrivyErrorCode string (e.g. "exited_auth_flow"
+      // when the user dismisses the modal). Treat that as not-an-error.
+      const message = typeof err === "string" ? err : "Sign-in failed";
+      if (message === "exited_auth_flow") {
+        setState({ kind: "idle" });
+        return;
+      }
+      setState({ kind: "error", message });
+    },
+  });
+
+  // If the user is already authenticated when they land here (e.g. they
+  // refreshed the page), run the sync + redirect automatically.
+  useEffect(() => {
+    if (ready && authenticated && state.kind === "idle") {
+      void finalizeLogin();
+    }
+  }, [ready, authenticated, state.kind, finalizeLogin]);
+
+  const busy = state.kind === "submitting" || !ready;
+
+  function handleSignIn() {
+    if (!ready) return;
+    setState({ kind: "idle" });
+    login();
   }
 
   return (
@@ -185,111 +129,34 @@ function LoginPageInner() {
 
         <section className="px-6 pb-28 md:px-8">
           <div className="mx-auto max-w-md">
-            {state.kind === "magic-sent" ? (
-              <SuccessCard
-                title={<>Check your <span className="text-accent">email</span></>}
-                body={
-                  <>
-                    We sent a sign-in link to{" "}
-                    <span className="text-white">{state.email}</span>. It expires in 15 minutes.
-                  </>
-                }
-                reset={() => setState({ kind: "idle" })}
-              />
-            ) : state.kind === "success" ? (
+            {state.kind === "success" ? (
               <SuccessCard
                 title={<>Signed <span className="text-accent">in</span></>}
                 body={<>Routing you to the dashboard.</>}
               />
             ) : (
               <div className="card-frame p-7 md:p-10">
-                {methods?.google && (
-                  <button
-                    type="button"
-                    onClick={handleGoogle}
-                    disabled={busy}
-                    className="btn-pill w-full justify-center text-sm disabled:cursor-not-allowed disabled:opacity-70"
-                  >
-                    {state.kind === "submitting" && state.via === "google" ? (
-                      <Loader2 size={16} className="animate-spin" />
-                    ) : (
-                      <GoogleIcon />
-                    )}
-                    Continue with Google
-                    <ChevronRight size={16} strokeWidth={2.4} />
-                  </button>
-                )}
-
-                {methods?.google && (
-                  <div className="my-6 flex items-center gap-4">
-                    <span className="h-px flex-1 bg-[var(--border)]" aria-hidden="true" />
-                    <span className="text-xs uppercase tracking-[0.18em] text-fg-subtle">or</span>
-                    <span className="h-px flex-1 bg-[var(--border)]" aria-hidden="true" />
-                  </div>
-                )}
-
-                <form onSubmit={handleEmail} className="grid gap-4">
-                  <label htmlFor="email" className="block">
-                    <span className="mb-2 block text-xs uppercase tracking-[0.16em] text-fg-subtle">
-                      Email
-                    </span>
-                    <input
-                      id="email"
-                      type="email"
-                      required
-                      autoComplete="email"
-                      placeholder="ada@example.com"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      className={inputCls}
-                    />
-                  </label>
-                  <button
-                    type="submit"
-                    disabled={busy}
-                    className="btn-pill-solid justify-center text-sm disabled:cursor-not-allowed disabled:opacity-70"
-                  >
-                    {state.kind === "submitting" && state.via === "email" ? (
-                      <Loader2 size={16} className="animate-spin" />
-                    ) : (
-                      <Mail size={16} strokeWidth={2.2} />
-                    )}
-                    {methods?.email
-                      ? "Email me a sign-in link"
-                      : methods?.demoEmail
-                        ? "Continue with email (testnet)"
-                        : "Continue with email"}
-                    <ChevronRight size={16} strokeWidth={2.4} />
-                  </button>
-                  {methods?.demoEmail && (
-                    <p className="text-center text-[11px] text-fg-subtle">
-                      Testnet demo: any email creates a session without verification.
-                    </p>
-                  )}
-                </form>
-
-                <div className="my-6 flex items-center gap-4">
-                  <span className="h-px flex-1 bg-[var(--border)]" aria-hidden="true" />
-                  <span className="text-xs uppercase tracking-[0.18em] text-fg-subtle">or</span>
-                  <span className="h-px flex-1 bg-[var(--border)]" aria-hidden="true" />
-                </div>
-
+                <p className="mb-6 text-center text-sm text-fg-muted">
+                  Sign in with email, Google, or a wallet. We&apos;ll handle the rest.
+                </p>
                 <button
                   type="button"
-                  onClick={handleWallet}
+                  onClick={handleSignIn}
                   disabled={busy}
-                  className="btn-pill w-full justify-center text-sm disabled:cursor-not-allowed disabled:opacity-70"
+                  className="btn-pill-solid w-full justify-center text-sm disabled:cursor-not-allowed disabled:opacity-70"
                 >
-                  {state.kind === "submitting" && state.via === "wallet" ? (
+                  {busy ? (
                     <Loader2 size={16} className="animate-spin" />
                   ) : (
-                    <Wallet size={16} strokeWidth={2.2} />
+                    <LogIn size={16} strokeWidth={2.2} />
                   )}
-                  Continue with wallet
+                  Sign in
                   <ChevronRight size={16} strokeWidth={2.4} />
                 </button>
-                <p className="mt-3 text-center text-[11px] text-fg-subtle">
-                  Sign-In With Ethereum (EIP-4361). No password — your wallet signs a message.
+
+                <p className="mt-4 text-center text-[11px] text-fg-subtle">
+                  Email magic link, Google OAuth, or any Web3 wallet —
+                  picked inside the next dialog.
                 </p>
 
                 {state.kind === "error" && (
@@ -321,11 +188,9 @@ function LoginPageInner() {
 function SuccessCard({
   title,
   body,
-  reset,
 }: {
   title: React.ReactNode;
   body: React.ReactNode;
-  reset?: () => void;
 }) {
   return (
     <div className="card-frame p-7 text-center md:p-10">
@@ -339,45 +204,6 @@ function SuccessCard({
         {title}
       </h2>
       <p className="mx-auto mt-3 max-w-sm text-sm text-fg-muted">{body}</p>
-      {reset && (
-        <button
-          type="button"
-          onClick={reset}
-          className="btn-pill mt-8 text-sm"
-        >
-          Use a different email
-          <ChevronRight size={16} strokeWidth={2.4} />
-        </button>
-      )}
     </div>
-  );
-}
-
-function GoogleIcon() {
-  return (
-    <svg
-      width="16"
-      height="16"
-      viewBox="0 0 18 18"
-      aria-hidden="true"
-      className="shrink-0"
-    >
-      <path
-        fill="#FFFFFF"
-        d="M17.64 9.2c0-.64-.06-1.25-.16-1.84H9v3.49h4.84a4.14 4.14 0 0 1-1.8 2.72v2.27h2.92c1.7-1.57 2.68-3.88 2.68-6.64Z"
-      />
-      <path
-        fill="#FFFFFF"
-        d="M9 18c2.43 0 4.47-.8 5.96-2.18l-2.92-2.27c-.81.55-1.85.87-3.04.87-2.34 0-4.32-1.58-5.03-3.7H.92v2.34A8.99 8.99 0 0 0 9 18Z"
-      />
-      <path
-        fill="#FFFFFF"
-        d="M3.97 10.72A5.41 5.41 0 0 1 3.68 9c0-.6.1-1.18.29-1.72V4.94H.92A8.99 8.99 0 0 0 0 9c0 1.45.35 2.83.92 4.06l3.05-2.34Z"
-      />
-      <path
-        fill="#FFFFFF"
-        d="M9 3.58c1.32 0 2.5.45 3.44 1.34l2.58-2.58A8.99 8.99 0 0 0 9 0 8.99 8.99 0 0 0 .92 4.94l3.05 2.34C4.68 5.16 6.66 3.58 9 3.58Z"
-      />
-    </svg>
   );
 }

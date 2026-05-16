@@ -5,7 +5,7 @@
  */
 
 import { NextResponse, type NextRequest } from "next/server";
-import { auth } from "@/auth";
+import { getSession } from "@/lib/server-session";
 import { prisma } from "@/lib/prisma";
 
 export const runtime = "nodejs";
@@ -25,12 +25,12 @@ export async function PATCH(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
-  const session = await auth();
-  if (!session?.user?.id) {
+  const session = await getSession();
+  if (!session) {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   }
   const { id } = await params;
-  const owned = await loadOwnedLink(id, session.user.id as string);
+  const owned = await loadOwnedLink(id, session.userId);
   if ("error" in owned) {
     return NextResponse.json({ error: owned.error }, { status: owned.status });
   }
@@ -59,12 +59,12 @@ export async function DELETE(
   _req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
-  const session = await auth();
-  if (!session?.user?.id) {
+  const session = await getSession();
+  if (!session) {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   }
   const { id } = await params;
-  const owned = await loadOwnedLink(id, session.user.id as string);
+  const owned = await loadOwnedLink(id, session.userId);
   if ("error" in owned) {
     return NextResponse.json({ error: owned.error }, { status: owned.status });
   }

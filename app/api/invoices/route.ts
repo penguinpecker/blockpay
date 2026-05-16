@@ -10,7 +10,7 @@
 
 import { NextResponse, type NextRequest } from "next/server";
 import type { Merchant } from "@prisma/client";
-import { auth } from "@/auth";
+import { getSession } from "@/lib/server-session";
 import { CHAINS, type ChainKey } from "@/lib/contracts";
 import { prisma } from "@/lib/prisma";
 import {
@@ -79,11 +79,10 @@ async function resolveCallerMerchant(
     throw err;
   }
 
-  const session = await auth();
-  const userId = session?.user?.id;
-  if (!userId) return null;
+  const session = await getSession();
+  if (!session) return null;
   return prisma.merchant.findUnique({
-    where: { userId: userId as string },
+    where: { userId: session.userId },
   });
 }
 

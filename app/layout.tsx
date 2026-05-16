@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Space_Grotesk, Manrope } from "next/font/google";
 import "./globals.css";
+import { AppPrivyProvider } from "@/components/privy-provider";
 
 const spaceGrotesk = Space_Grotesk({
   variable: "--font-space-grotesk",
@@ -32,7 +33,7 @@ export default function RootLayout({
       className={`${spaceGrotesk.variable} ${manrope.variable} h-full`}
     >
       <body className="min-h-full bg-black text-white antialiased">
-        {children}
+        <AppPrivyProvider>{children}</AppPrivyProvider>
       </body>
     </html>
   );

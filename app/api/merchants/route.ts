@@ -1,5 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { auth } from "@/auth";
+import { getSession } from "@/lib/server-session";
 import { prisma } from "@/lib/prisma";
 import crypto from "node:crypto";
 
@@ -11,10 +11,11 @@ export const runtime = "nodejs";
  * Idempotent: if a merchant already exists for this user, returns it.
  */
 export async function POST(req: NextRequest) {
-  const session = await auth();
-  if (!session?.user?.id) {
+  const session = await getSession();
+  if (!session) {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   }
+  const userId = session.userId;
 
   let body: {
     businessName?: string;
@@ -45,12 +46,12 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "invalid_settlement_currency" }, { status: 400 });
   }
 
-  // If the user signed up via email, persist it too. The email may be in
-  // session.user.email or in the request body for SIWE-only users.
+  // Persist email from the form when provided (Privy may also have
+  // attached one during session sync — keep the most recent).
   const email = body.email?.trim() || session.user.email || null;
 
   await prisma.user.update({
-    where: { id: session.user.id as string },
+    where: { id: userId },
     data: email ? { email: email.toLowerCase() } : {},
   });
 
@@ -58,9 +59,9 @@ export async function POST(req: NextRequest) {
   const apiKeyHash = crypto.createHash("sha256").update(apiKeyPlaintext).digest("hex");
 
   const merchant = await prisma.merchant.upsert({
-    where: { userId: session.user.id as string },
+    where: { userId },
     create: {
-      userId: session.user.id as string,
+      userId,
       businessName,
       settlementAddress,
       settlementChainKey,
@@ -95,12 +96,12 @@ export async function POST(req: NextRequest) {
  * Returns the authed user's merchant profile, or null.
  */
 export async function GET() {
-  const session = await auth();
-  if (!session?.user?.id) {
+  const session = await getSession();
+  if (!session) {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   }
   const merchant = await prisma.merchant.findUnique({
-    where: { userId: session.user.id as string },
+    where: { userId: session.userId },
   });
   return NextResponse.json({ merchant });
 }
@@ -114,10 +115,11 @@ export async function GET() {
  * once.
  */
 export async function PATCH(req: NextRequest) {
-  const session = await auth();
-  if (!session?.user?.id) {
+  const session = await getSession();
+  if (!session) {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   }
+  const userId = session.userId;
 
   let body: {
     businessName?: string;
@@ -134,7 +136,7 @@ export async function PATCH(req: NextRequest) {
   }
 
   const existing = await prisma.merchant.findUnique({
-    where: { userId: session.user.id as string },
+    where: { userId },
   });
   if (!existing) {
     return NextResponse.json({ error: "no_merchant" }, { status: 404 });

@@ -1,8 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
-import { signIn } from "next-auth/react";
+import { useCallback, useEffect, useState } from "react";
+import { useLogin, usePrivy } from "@privy-io/react-auth";
 import {
   CheckCircle2,
   ChevronRight,
@@ -10,40 +10,11 @@ import {
   Copy,
   Check,
   Loader2,
+  LogIn,
 } from "lucide-react";
 import { Nav } from "@/components/nav";
 import { Footer } from "@/components/footer";
 import { PaletteScope } from "@/components/palette-scope";
-
-type AuthMethods = {
-  google: boolean;
-  email: boolean;
-  demoEmail: boolean;
-  wallet: boolean;
-};
-
-function GoogleIcon() {
-  return (
-    <svg width="16" height="16" viewBox="0 0 18 18" aria-hidden="true" className="shrink-0">
-      <path
-        fill="#FFFFFF"
-        d="M17.64 9.2c0-.64-.06-1.25-.16-1.84H9v3.49h4.84a4.14 4.14 0 0 1-1.8 2.72v2.27h2.92c1.7-1.57 2.68-3.88 2.68-6.64Z"
-      />
-      <path
-        fill="#FFFFFF"
-        d="M9 18c2.43 0 4.47-.8 5.96-2.18l-2.92-2.27c-.81.55-1.85.87-3.04.87-2.34 0-4.32-1.58-5.03-3.7H.92v2.34A8.99 8.99 0 0 0 9 18Z"
-      />
-      <path
-        fill="#FFFFFF"
-        d="M3.97 10.72A5.41 5.41 0 0 1 3.68 9c0-.6.1-1.18.29-1.72V4.94H.92A8.99 8.99 0 0 0 0 9c0 1.45.35 2.83.92 4.06l3.05-2.34Z"
-      />
-      <path
-        fill="#FFFFFF"
-        d="M9 3.58c1.32 0 2.5.45 3.44 1.34l2.58-2.58A8.99 8.99 0 0 0 9 0 8.99 8.99 0 0 0 .92 4.94l3.05 2.34C4.68 5.16 6.66 3.58 9 3.58Z"
-      />
-    </svg>
-  );
-}
 
 const volumeOptions = [
   "Just exploring",
@@ -115,37 +86,76 @@ export default function SignupPage() {
   const [form, setForm] = useState<FormState>(initialState);
   const [state, setState] = useState<SubmitState>({ kind: "idle" });
   const [copied, setCopied] = useState(false);
-  const [methods, setMethods] = useState<AuthMethods | null>(null);
-  const [googleBusy, setGoogleBusy] = useState(false);
-  const submitted = state.kind === "success";
+  const [authError, setAuthError] = useState<string | null>(null);
+  const [syncing, setSyncing] = useState(false);
+
+  const { ready, authenticated, user, getAccessToken } = usePrivy();
+
+  // Sync the local User row whenever Privy reports an authenticated
+  // session. This runs once on page load if the user is already signed
+  // in, and again right after the Privy modal closes successfully.
+  const sync = useCallback(async () => {
+    if (!authenticated) return;
+    setSyncing(true);
+    setAuthError(null);
+    try {
+      const token = await getAccessToken();
+      const headers: Record<string, string> = {
+        "Content-Type": "application/json",
+      };
+      if (token) headers.Authorization = `Bearer ${token}`;
+      const res = await fetch("/api/auth/privy/sync", {
+        method: "POST",
+        headers,
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        setAuthError(
+          data?.error
+            ? `Sync failed: ${data.error}`
+            : "Could not finalize sign-in.",
+        );
+      }
+    } catch (err) {
+      setAuthError(err instanceof Error ? err.message : "Sync failed");
+    } finally {
+      setSyncing(false);
+    }
+  }, [authenticated, getAccessToken]);
 
   useEffect(() => {
-    fetch("/api/auth/methods")
-      .then((r) => r.json())
-      .then((m: AuthMethods) => setMethods(m))
-      .catch(() => setMethods({ google: false, email: false, demoEmail: true, wallet: true }));
-  }, []);
+    if (ready && authenticated) {
+      void sync();
+    }
+  }, [ready, authenticated, sync]);
+
+  // Pre-fill the email field once Privy gives us one so the user
+  // doesn't have to retype it.
+  useEffect(() => {
+    if (user?.email?.address && !form.email) {
+      setForm((prev) => ({ ...prev, email: user.email!.address }));
+    }
+  }, [user, form.email]);
+
+  const { login } = useLogin({
+    onComplete: () => {
+      void sync();
+    },
+    onError: (err) => {
+      const message = typeof err === "string" ? err : "Sign-in failed";
+      if (message === "exited_auth_flow") {
+        return;
+      }
+      setAuthError(message);
+    },
+  });
 
   function update<K extends keyof FormState>(key: K, value: FormState[K]) {
     setForm((prev) => ({ ...prev, [key]: value }));
   }
 
-  async function handleGoogleSignup() {
-    setGoogleBusy(true);
-    try {
-      await signIn("google", { callbackUrl: "/signup" });
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : "Google sign-in failed";
-      setState({ kind: "error", message: msg });
-      setGoogleBusy(false);
-    }
-  }
-
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    // Client-side address sanity check — gives a clear error before
-    // the server's regex would (and matches the user's perception that
-    // "the form" rejected it, not "the API").
     if (!/^0x[a-fA-F0-9]{40}$/.test(form.wallet.trim())) {
       setState({
         kind: "error",
@@ -153,25 +163,15 @@ export default function SignupPage() {
       });
       return;
     }
+    if (!authenticated) {
+      setState({
+        kind: "error",
+        message: "Sign in first using the button above so we can create your account.",
+      });
+      return;
+    }
     setState({ kind: "submitting" });
     try {
-      // 1. Sign in. If real email magic-link is configured, use it; otherwise
-      //    fall back to the testnet demo-email provider that creates a user
-      //    immediately. Google users are already authed via the button above
-      //    so they skip this step (signIn for resend will fail gracefully).
-      const providerId = methods?.email ? "resend" : "demo-email";
-      const signInResult = await signIn(providerId, {
-        email: form.email,
-        redirect: false,
-      });
-      if (signInResult?.error) {
-        setState({
-          kind: "error",
-          message: "Could not create session. Try Google sign-up at the top, or check your email config.",
-        });
-        return;
-      }
-      // 2. Create the merchant profile + receive an API key.
       const res = await fetch("/api/merchants", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -213,6 +213,8 @@ export default function SignupPage() {
       // clipboard blocked — user can select + copy manually
     }
   }
+
+  const submitted = state.kind === "success";
 
   return (
     <PaletteScope>
@@ -290,37 +292,47 @@ export default function SignupPage() {
                   Create your merchant account
                 </h2>
                 <p className="mt-3 text-sm text-fg-muted">
-                  Four quick fields. You can edit any of this later from the
-                  dashboard.
+                  Sign up with email, Google, or a wallet, then tell us where to
+                  settle payments.
                 </p>
 
-                {methods?.google && (
-                  <>
-                    <button
-                      type="button"
-                      onClick={handleGoogleSignup}
-                      disabled={googleBusy}
-                      className="btn-pill mt-6 w-full justify-center text-sm disabled:cursor-not-allowed disabled:opacity-70"
-                    >
-                      {googleBusy ? (
-                        <Loader2 size={16} className="animate-spin" />
-                      ) : (
-                        <GoogleIcon />
-                      )}
-                      Continue with Google
-                      <ChevronRight size={16} strokeWidth={2.4} />
-                    </button>
-                    <div className="my-6 flex items-center gap-4">
-                      <span className="h-px flex-1 bg-[var(--border)]" aria-hidden="true" />
-                      <span className="text-xs uppercase tracking-[0.18em] text-fg-subtle">
-                        or fill in below
-                      </span>
-                      <span className="h-px flex-1 bg-[var(--border)]" aria-hidden="true" />
+                <div className="mt-6">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setAuthError(null);
+                      login();
+                    }}
+                    disabled={!ready || authenticated || syncing}
+                    className="btn-pill w-full justify-center text-sm disabled:cursor-not-allowed disabled:opacity-70"
+                  >
+                    {!ready || syncing ? (
+                      <Loader2 size={16} className="animate-spin" />
+                    ) : authenticated ? (
+                      <Check size={16} strokeWidth={2.4} />
+                    ) : (
+                      <LogIn size={16} strokeWidth={2.2} />
+                    )}
+                    {authenticated ? "Signed in — fill the details below" : "Sign up / sign in"}
+                    {!authenticated && <ChevronRight size={16} strokeWidth={2.4} />}
+                  </button>
+                  {authError && (
+                    <div className="mt-3 flex items-start gap-2 rounded-xl border border-amber-500/30 bg-amber-500/[0.06] px-4 py-3 text-xs text-amber-300">
+                      <AlertTriangle size={14} className="mt-[2px] shrink-0" />
+                      <span>{authError}</span>
                     </div>
-                  </>
-                )}
+                  )}
+                </div>
 
-                <form onSubmit={handleSubmit} className="mt-8 grid gap-5">
+                <div className="my-6 flex items-center gap-4">
+                  <span className="h-px flex-1 bg-[var(--border)]" aria-hidden="true" />
+                  <span className="text-xs uppercase tracking-[0.18em] text-fg-subtle">
+                    merchant details
+                  </span>
+                  <span className="h-px flex-1 bg-[var(--border)]" aria-hidden="true" />
+                </div>
+
+                <form onSubmit={handleSubmit} className="grid gap-5">
                   <Field label="Business name" htmlFor="businessName">
                     <input
                       id="businessName"
@@ -509,7 +521,7 @@ export default function SignupPage() {
 
                   <button
                     type="submit"
-                    disabled={state.kind === "submitting"}
+                    disabled={state.kind === "submitting" || !authenticated}
                     className="btn-pill-solid mt-3 justify-center text-sm disabled:cursor-not-allowed disabled:opacity-70"
                   >
                     {state.kind === "submitting" ? "Creating…" : "Create merchant account"}
