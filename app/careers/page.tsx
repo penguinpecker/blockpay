@@ -95,7 +95,7 @@ export default function CareersPage() {
                     </ul>
                   </div>
                   <div className="shrink-0">
-                    <Link href="/contact" className="btn-pill text-sm">
+                    <Link href="/signup" className="btn-pill text-sm">
                       Contact us
                       <ChevronRight size={16} strokeWidth={2.4} />
                     </Link>

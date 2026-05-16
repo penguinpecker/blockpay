@@ -93,7 +93,7 @@ export default function AboutPage() {
               </li>
             </ul>
             <div className="mt-8">
-              <Link href="/contact" className="btn-pill text-sm">
+              <Link href="/signup" className="btn-pill text-sm">
                 Talk to us
                 <ChevronRight size={16} strokeWidth={2.4} />
               </Link>

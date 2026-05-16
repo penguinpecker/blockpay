@@ -119,7 +119,7 @@ export default function SolutionsPage() {
                   Start free
                   <ChevronRight size={16} strokeWidth={2.4} />
                 </Link>
-                <Link href="/contact" className="btn-pill text-sm">
+                <Link href="/signup" className="btn-pill text-sm">
                   Talk to sales
                   <ChevronRight size={16} strokeWidth={2.4} />
                 </Link>
@@ -171,7 +171,7 @@ export default function SolutionsPage() {
               you can take stablecoin payments. Tell us what you&apos;re building.
             </p>
             <div className="mt-8 flex flex-wrap justify-center gap-3">
-              <Link href="/contact" className="btn-pill-solid text-sm">
+              <Link href="/signup" className="btn-pill-solid text-sm">
                 Talk to an engineer
                 <ChevronRight size={16} strokeWidth={2.4} />
               </Link>

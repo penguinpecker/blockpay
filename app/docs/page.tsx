@@ -197,7 +197,7 @@ export default function DocsPage() {
               first-response time is under an hour during business windows.
             </p>
             <div className="mt-8 flex flex-wrap justify-center gap-3">
-              <Link href="/contact" className="btn-pill-solid text-sm">
+              <Link href="/signup" className="btn-pill-solid text-sm">
                 Contact support
                 <ChevronRight size={16} strokeWidth={2.4} />
               </Link>

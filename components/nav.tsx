@@ -6,8 +6,7 @@ const links = [
   { label: "Home", href: "/" },
   { label: "Features", href: "/features" },
   { label: "Solutions", href: "/solutions" },
-  { label: "Pricing", href: "/pricing" },
-  { label: "Contact", href: "/contact" },
+  { label: "Docs", href: "/docs" },
 ];
 
 export function Nav({ active = "Home" }: { active?: string }) {

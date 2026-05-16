@@ -26,9 +26,7 @@ const cols = [
     title: "Company",
     items: [
       { label: "About Us", href: "/about" },
-      { label: "Contact Us", href: "/contact" },
       { label: "Career", href: "/careers" },
-      { label: "Pricing", href: "/pricing" },
       { label: "Blog Articles", href: "/blog" },
     ],
   },

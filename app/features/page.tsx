@@ -202,11 +202,11 @@ export default function FeaturesPage() {
               integration end-to-end on a 30-minute call.
             </p>
             <div className="mt-8 flex flex-wrap justify-center gap-3">
-              <Link href="/contact" className="btn-pill-solid text-sm">
+              <Link href="/signup" className="btn-pill-solid text-sm">
                 Book a walkthrough
                 <ChevronRight size={16} strokeWidth={2.4} />
               </Link>
-              <Link href="/pricing" className="btn-pill text-sm">
+              <Link href="/signup" className="btn-pill text-sm">
                 See pricing
                 <ChevronRight size={16} strokeWidth={2.4} />
               </Link>
