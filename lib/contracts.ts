@@ -46,7 +46,10 @@ export const CHAINS: Record<ChainKey, ChainConfig> = {
     isTestnet: true,
     explorerBase: "https://explorer.testnet.arc.network",
     router: "0x50a2a3684F1df4db9A58C21febaf23D6b7DC8B2F",
-    usdc: null,
+    // Arc native USDC ERC-20 system contract. Shared underlying balance with
+    // the chain's native gas token; ERC-20 interface uses 6 decimals.
+    // https://docs.arc.io/arc/references/contract-addresses
+    usdc: "0x3600000000000000000000000000000000000000",
     testUsdc: null,
     circlePaymasterV08: "0x3BA9A96eE3eFf3A69E2B18886AcF52027EFF8966",
     entryPointV08: ENTRY_POINT_V08,

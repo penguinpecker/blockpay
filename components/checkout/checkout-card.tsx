@@ -196,8 +196,14 @@ export function CheckoutCard({
 
   const target = configForPill(chain as "arc" | "ethereum" | "solana");
   const isLive = target.status === "live-testnet" && target.chain !== null;
+  // Gasless (Circle Paymaster + Kernel SCA) only makes sense when we have a
+  // mintable TestUSDC to seed the SCA. On Arc with real USDC, the customer
+  // pays the merchant from their EOA directly — Arc charges gas in USDC
+  // natively, so the customer's same USDC balance covers gas + payment.
   const useGasless =
-    isGaslessChainKey(target.chain?.key) && paymasterAvailable(target.chain.key);
+    isGaslessChainKey(target.chain?.key) &&
+    paymasterAvailable(target.chain.key) &&
+    Boolean(target.chain?.testUsdc);
 
   const steps = useMemo(() => stepsFor(status, Boolean(account)), [status, account]);
 
@@ -291,17 +297,30 @@ export function CheckoutCard({
         args: [account],
       })) as bigint;
 
-      if (balance < amountUsdc && target.chain.testUsdc === tokenAddress) {
-        setStatus({ kind: "approving" });
-        const mintHash = await wallet.writeContract({
-          account,
-          chain: null,
-          address: tokenAddress,
-          abi: ERC20_ABI,
-          functionName: "mint",
-          args: [account, parseUnits("100", 6)],
-        });
-        await pub.waitForTransactionReceipt({ hash: mintHash });
+      if (balance < amountUsdc) {
+        if (target.chain.testUsdc === tokenAddress) {
+          // Demo TestUSDC — auto-mint to the customer EOA so the flow can
+          // proceed without a faucet roundtrip.
+          setStatus({ kind: "approving" });
+          const mintHash = await wallet.writeContract({
+            account,
+            chain: null,
+            address: tokenAddress,
+            abi: ERC20_ABI,
+            functionName: "mint",
+            args: [account, parseUnits("100", 6)],
+          });
+          await pub.waitForTransactionReceipt({ hash: mintHash });
+        } else {
+          // Real USDC — no minting. Tell the customer to top up.
+          const needDisplay = (Number(amountUsdc) / 1_000_000).toFixed(2);
+          const haveDisplay = (Number(balance) / 1_000_000).toFixed(2);
+          setStatus({
+            kind: "error",
+            message: `Insufficient USDC on ${target.chain.name}. Need $${needDisplay}, have $${haveDisplay}.`,
+          });
+          return;
+        }
       }
 
       const allowance = (await pub.readContract({

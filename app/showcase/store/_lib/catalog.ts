@@ -31,7 +31,7 @@ export const CATALOG: Product[] = [
     blurb: "Heavy canvas. Honest stitching.",
     description:
       "A 16-ounce raw canvas tote sewn flat and lined twice along the strap. Big enough for a week's farmers' market haul, plain enough to disappear into any wardrobe. Made in small batches at a workshop in northern Portugal.",
-    priceUsd: "48.00",
+    priceUsd: "0.48",
     accent: "#c2410c",
     accentSoft: "#e8a87c",
   },
@@ -41,7 +41,7 @@ export const CATALOG: Product[] = [
     blurb: "Stoneware, smoke-fired.",
     description:
       "Hand-thrown stoneware mug with a smoke-fired exterior and a creamy oat-coloured glaze inside. Holds 12 ounces. Each piece carries its own kiln history — no two share the same dappling.",
-    priceUsd: "24.00",
+    priceUsd: "0.24",
     accent: "#7c5a3a",
     accentSoft: "#c9a983",
   },
@@ -51,7 +51,7 @@ export const CATALOG: Product[] = [
     blurb: "120 pages of writing room.",
     description:
       "Smyth-sewn notebook with a vegetable-tanned cover that ages with use. 120 ivory pages of 100gsm uncoated paper that takes fountain ink without ghosting. Lays flat at any spread.",
-    priceUsd: "18.00",
+    priceUsd: "0.18",
     accent: "#3f6b4a",
     accentSoft: "#9bbfa3",
   },
@@ -61,7 +61,7 @@ export const CATALOG: Product[] = [
     blurb: "Long ties. Deep pockets.",
     description:
       "Cross-back apron cut from washed olive linen with leather neck-grommets and two front pockets that actually fit a paring knife. Pre-shrunk; only gets softer.",
-    priceUsd: "36.00",
+    priceUsd: "0.36",
     accent: "#556b2f",
     accentSoft: "#a7b787",
   },
@@ -71,7 +71,7 @@ export const CATALOG: Product[] = [
     blurb: "Slate and lime. Cork-backed.",
     description:
       "A set of four cork-backed coasters cut from offcuts of natural slate and reclaimed limestone. Each set is paired by hand so the tones sit well together. 4 inches square.",
-    priceUsd: "32.00",
+    priceUsd: "0.32",
     accent: "#4a5568",
     accentSoft: "#a0aec0",
   },
